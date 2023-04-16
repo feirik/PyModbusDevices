@@ -1,4 +1,4 @@
-This is a Python implementation of a Modbus TCP slave device simulating a voltage regulator.
+This is a Python implementation of a Modbus TCP slave device simulating a voltage regulator. The voltage regulator is inspired by the no longer supported ModbusPal project written in Java.
 
 # Modbus Holding Registers
 The following holding registers are implemented in the simulated voltage regulator:

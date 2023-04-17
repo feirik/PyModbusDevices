@@ -1,0 +1,4 @@
+argparse==1.4.0
+socket==0.5.3
+struct==0.3.2
+threading==0.5.7

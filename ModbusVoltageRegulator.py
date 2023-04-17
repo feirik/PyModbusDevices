@@ -30,19 +30,31 @@ WRITE_MULTIPLE_COILS = 15 # Not supported
 WRITE_MULTIPLE_REGISTERS = 16 # Not supported
 
 class ModbusClient:
+    MIN_SET_POINT = 225
+    MAX_SET_POINT = 235
+    SET_POINT_230V = 230
+
+    REGISTER_SIZE = 65536
+    RANDOM_INPUT_V_LOWER = 210
+    RANDOM_INPUT_V_UPPER = 255
+
+    MAX_REQUEST_SIZE = 1024
+    BYTE_SIZE = 8
+    BYTE_ROUND_UP = 7
+
     def __init__(self, host, port, debug=False):
         self.debug = debug
 
         # Initialize the holding registers to all zeros
-        self.holding_registers = [0] * 65536
+        self.holding_registers = [0] * REGISTER_SIZE
 
         # Initialize Modbus registers to typical values for a 230V voltage regulator
-        self.holding_registers[2] = 230
-        self.holding_registers[3] = 225
-        self.holding_registers[4] = 235
+        self.holding_registers[2] = SET_POINT_230V
+        self.holding_registers[3] = MIN_SET_POINT
+        self.holding_registers[4] = MAX_SET_POINT
 
         # Initialize the coils to all zeros
-        self.coils = [0] * 65536
+        self.coils = [0] * REGISTER_SIZE
 
         # Initialize output voltage to be enabled, override to be disabled
         self.coils[0] = 1
@@ -60,7 +72,7 @@ class ModbusClient:
 
     def update_voltage_regulator(self):
         while True:
-            self.holding_registers[0] = random.randint(210, 255)
+            self.holding_registers[0] = random.randint(RANDOM_INPUT_V_LOWER, RANDOM_INPUT_V_UPPER)
 
             # Get the set point from the set point holding register
             set_point = self.holding_registers[2]
@@ -100,7 +112,7 @@ class ModbusClient:
             conn, addr = self.socket.accept()
             
             # Receive the request data
-            request = conn.recv(1024)
+            request = conn.recv(MAX_REQUEST_SIZE)
             
             # If the request data is not empty, handle the request
             if len(request) > 0:
@@ -137,10 +149,10 @@ class ModbusClient:
                 coil_index = coil_address + i
 
                 # Calculate the index of the byte in the coils array that contains the current coil
-                byte_index = coil_index // 8
+                byte_index = coil_index // BYTE_SIZE
 
                 # Calculate the bit index of the current coil within the byte
-                bit_index = coil_index % 8
+                bit_index = coil_index % BYTE_SIZE
 
                 # Check if the current coil is set (i.e., if the corresponding bit is 1)
                 if self.coils[byte_index] & (1 << bit_index):
@@ -149,7 +161,7 @@ class ModbusClient:
                     coil_data.append(0)
 
             # Calculate the number of bytes needed to represent the coils, adding 7 to round up to the nearest byte
-            byte_count = (coil_count + 7) // 8
+            byte_count = (coil_count + BYTE_ROUND_UP) // BYTE_SIZE
 
             # Calculate the total response length in bytes by adding 3 bytes for the header and byte count
             response_length = 3 + byte_count
@@ -176,22 +188,22 @@ class ModbusClient:
             # Pack the coil values into a byte array
             coil_data = bytearray()
             # Iterate over each group of 8 coils (1 byte) in the coils list
-            for i in range(coil_count // 8):
+            for i in range(coil_count // BYTE_SIZE):
                 byte_value = 0
                 # Iterate over the 8 coils in the current byte
-                for j in range(8):
+                for j in range(BYTE_SIZE):
                     # Get the value of the current coil (1 or 0) and shift it to the correct position in the byte
-                    bit_value = coils[i * 8 + j]
+                    bit_value = coils[i * BYTE_SIZE + j]
                     byte_value |= bit_value << j
                 coil_data.append(byte_value)
 
             # If the coil count is not evenly divisible by 8, calculate the remaining bits and add them to the byte array
-            if coil_count % 8 != 0:
+            if coil_count % BYTE_SIZE != 0:
                 byte_value = 0
                 # Iterate over the remaining bits
-                for i in range(coil_count % 8):
+                for i in range(coil_count % BYTE_SIZE):
                     # Calculate the bit value and OR it with the byte value
-                    bit_value = coils[len(coils) - (coil_count % 8) + i]
+                    bit_value = coils[len(coils) - (coil_count % BYTE_SIZE) + i]
                     byte_value |= bit_value << i
                 coil_data.append(byte_value)
 

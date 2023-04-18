@@ -40,6 +40,8 @@ RANDOM_INPUT_V_UPPER = 255
 MAX_REQUEST_SIZE = 1024
 BYTE_SIZE = 8
 BYTE_ROUND_UP = 7
+REGISTER_BYTE_SIZE = 2
+RESPONSE_HEADER_SIZE = 3
 
 class ModbusClient:
     def __init__(self, host, port, debug=False):
@@ -63,6 +65,9 @@ class ModbusClient:
         # Create a socket and bind it to the specified host and port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((host, port))
+
+        # Set flag to indicate if message has been written
+        self.voltage_spike_alerted = False
 
         # Start a thread to update voltage generator
         self.update_thread = threading.Thread(target=self.update_voltage_regulator)
@@ -98,6 +103,11 @@ class ModbusClient:
                 self.holding_registers[1] = new_value
             else:
                 self.holding_registers[1] = 0
+
+            # Write message if value is above 300 and message has not yet been written
+            if self.holding_registers[1] > 300 and not self.voltage_spike_alerted:
+                print("Output voltage spiked above 300! Circuit boards are cooking...")
+                self.voltage_spike_alerted = True
 
             # Sleep for 1 second before executing the loop again
             time.sleep(1)
@@ -223,8 +233,8 @@ class ModbusClient:
                 register_data += struct.pack(">H", value)
 
             # Calculate the number of bytes required to store the register data and the response length
-            byte_count = quantity * 2
-            response_length = 3 + byte_count
+            byte_count = quantity * REGISTER_BYTE_SIZE
+            response_length = RESPONSE_HEADER_SIZE + byte_count
 
             # Create the response packet with the transaction ID, protocol ID, response length, unit ID, and function code
             response = struct.pack(">HHHBB", transaction_id, protocol_id, response_length, unit_id, function_code)

@@ -1,5 +1,5 @@
 import unittest
-from ModbusVoltageRegulator import ModbusClient
+from modbus_voltage_regulator import ModbusClient
 
 MIN_SET_POINT = 225
 MAX_SET_POINT = 235

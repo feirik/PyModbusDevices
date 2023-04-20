@@ -46,6 +46,7 @@ RESPONSE_HEADER_SIZE = 3
 class ModbusClient:
     def __init__(self, host, port, debug=False):
         self.debug = debug
+        self.listening = False
 
         # Initialize the holding registers to all zeros
         self.holding_registers = [0] * REGISTER_SIZE
@@ -114,10 +115,12 @@ class ModbusClient:
     
 
     def listen(self):
+        self.listening = True
+
         # Listen for incoming connections
         self.socket.listen(1)
         
-        while True:
+        while self.listening:
             # Accept an incoming connection
             conn, addr = self.socket.accept()
             
@@ -295,6 +298,9 @@ class ModbusClient:
     
     def start(self):
         self.listen()
+
+    def stop(self):
+        self.listening = False
 
 
 if __name__ == '__main__':

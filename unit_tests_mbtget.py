@@ -75,5 +75,62 @@ class ModbusClientTestCase(unittest.TestCase):
         self.client.stop()
         subprocess.run(["mbtget", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
+
+    def test_write_0_to_coil_0(self):
+        register_index = 0
+        test_value = 0
+
+        port = self.client.socket.getsockname()[1]
+        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+
+        register_value = self.client.coils[register_index]
+        self.assertEqual(test_value, register_value)
+
+        self.client.stop()
+        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+
+
+    def test_write_1_to_coil_1(self):
+        register_index = 1
+        test_value = 1
+
+        port = self.client.socket.getsockname()[1]
+        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+
+        register_value = self.client.coils[register_index]
+        self.assertEqual(test_value, register_value)
+
+        self.client.stop()
+        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+
+
+    def test_write_1_to_coil_200(self):
+        register_index = 200
+        test_value = 1
+
+        port = self.client.socket.getsockname()[1]
+        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+
+        register_value = self.client.coils[register_index]
+        self.assertEqual(test_value, register_value)
+
+        self.client.stop()
+        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+
+
+    def test_write_1_to_coil_65535(self):
+        register_index = 65535
+        test_value = 1
+
+        port = self.client.socket.getsockname()[1]
+        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+
+        register_value = self.client.coils[register_index]
+        self.assertEqual(test_value, register_value)
+
+        self.client.stop()
+        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+
+
 if __name__ == '__main__':
     unittest.main()

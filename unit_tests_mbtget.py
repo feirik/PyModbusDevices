@@ -1,6 +1,7 @@
 import unittest
 import subprocess
 import threading
+import time
 from modbus_voltage_regulator import ModbusClient
 
 class ModbusClientTestCase(unittest.TestCase):
@@ -76,7 +77,7 @@ class ModbusClientTestCase(unittest.TestCase):
         subprocess.run(["mbtget", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
 
-    def test_write_0_to_coil_0(self):
+    def test_disable_output_coil_0(self):
         register_index = 0
         test_value = 0
 
@@ -85,6 +86,12 @@ class ModbusClientTestCase(unittest.TestCase):
 
         register_value = self.client.coils[register_index]
         self.assertEqual(test_value, register_value)
+
+        # Sleep to let read loop update
+        time.sleep(1)
+
+        # Verify that voltage output was set to 0
+        self.assertEqual(0, self.client.holding_registers[1])
 
         self.client.stop()
         subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
@@ -130,6 +137,71 @@ class ModbusClientTestCase(unittest.TestCase):
 
         self.client.stop()
         subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+
+
+    def test_enable_override_coil_1(self):
+        register_index = 1
+        test_value = 1
+
+        # Enable override coil
+        port = self.client.socket.getsockname()[1]
+        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+
+        register_value = self.client.coils[register_index]
+        self.assertEqual(test_value, register_value)
+
+        # Verify that set point can be overridden past max limit
+        override_value = 280
+        set_point_index = 2
+        time.sleep(1)
+
+        subprocess.run(["mbtget", "-w6", str(override_value), "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
+
+        set_point_register_value = self.client.holding_registers[set_point_index]
+        self.assertEqual(override_value, set_point_register_value)
+
+        self.client.stop()
+        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        
+        
+    def test_max_limit_set_point(self):
+        MAX_SET_POINT = 235
+
+        port = self.client.socket.getsockname()[1]
+
+        # Verify that set point cannot be overridden above max limit
+        override_value = 280
+        set_point_index = 2
+
+        subprocess.run(["mbtget", "-w6", str(override_value), "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
+
+        time.sleep(1)
+
+        set_point_register_value = self.client.holding_registers[set_point_index]
+        self.assertEqual(MAX_SET_POINT, set_point_register_value)
+
+        self.client.stop()
+        subprocess.run(["mbtget", "-w5", "0", "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
+
+
+    def test_min_limit_set_point(self):
+        MIN_SET_POINT = 225
+
+        port = self.client.socket.getsockname()[1]
+
+        # Verify that set point cannot be overridden below minimum limit
+        override_value = 80
+        set_point_index = 2
+
+        subprocess.run(["mbtget", "-w6", str(override_value), "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
+
+        time.sleep(1)
+
+        set_point_register_value = self.client.holding_registers[set_point_index]
+        self.assertEqual(MIN_SET_POINT, set_point_register_value)
+
+        self.client.stop()
+        subprocess.run(["mbtget", "-w5", "0", "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
 
 
 if __name__ == '__main__':

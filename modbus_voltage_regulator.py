@@ -43,7 +43,7 @@ BYTE_ROUND_UP = 7
 REGISTER_BYTE_SIZE = 2
 RESPONSE_HEADER_SIZE = 3
 
-class ModbusClient:
+class ModbusServer:
     def __init__(self, host, port, debug=False):
         self.debug = debug
         self.listening = False
@@ -314,5 +314,5 @@ if __name__ == '__main__':
 
     print(f"Starting Modbus TCP device with hostip={args.host}, port={args.port}, debug printing={'on' if args.debug else 'off'}")
 
-    client = ModbusClient(args.host, args.port, args.debug)
-    client.start()
+    server = ModbusServer(args.host, args.port, args.debug)
+    server.start()

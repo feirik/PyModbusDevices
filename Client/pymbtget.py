@@ -10,7 +10,7 @@ import ipaddress
 from enum import Enum
 
 # Constants
-VERSION = '0.0.1'
+VERSION = '0.0.2'
 
 # Modbus/TCP Parameters
 MODBUS_PORT = 10502
@@ -90,12 +90,25 @@ class ModbusTCPClient:
 
         if function_code in [READ_COILS, READ_DISCRETE_INPUTS, READ_HOLDING_REGISTERS, READ_INPUT_REGISTERS, WRITE_SINGLE_REGISTER]:
             tx_buffer = struct.pack(">HHHBBHH", transaction_id, protocol_id, length, unit_id, function_code, address, quantity_or_value)
+            quantity_or_value_hex_values = [f"{(quantity_or_value >> 8) & 0xFF:02X}", f"{quantity_or_value & 0xFF:02X}"]
         elif function_code == WRITE_SINGLE_COIL:
             bit_value = 0xFF00 if quantity_or_value == 1 else 0x0000
             tx_buffer = struct.pack(">HHHBBHH", transaction_id, protocol_id, length, unit_id, function_code, address, bit_value)
+            quantity_or_value_hex_values = [f"{(bit_value >> 8) & 0xFF:02X}", f"{bit_value & 0xFF:02X}"]
+
+        # Convert values to uppercase hex string format
+        trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+        protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+        length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+        unit_id_hex = f"{unit_id:02X}"
+        function_code_hex = f"{function_code:02X}"
+        address_hex_values = [f"{(address >> 8) & 0xFF:02X}", f"{address & 0xFF:02X}"]
+
+        # Join header and data hex values
+        formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex] + address_hex_values + quantity_or_value_hex_values)
+        print(f"Tx\n{formatted_hex}")
 
         self.sock.send(tx_buffer)
-
 
     def receive_response(self):
         response_header = self.sock.recv(7)
@@ -105,6 +118,25 @@ class ModbusTCPClient:
         response_body = self.sock.recv(length - 1)
 
         function_code = response_body[0]
+
+        # Handle Modbus TCP exceptions
+        if function_code >= 0x80:
+            exception_code = response_body[1]
+            exception_msg = exception_codes.get(exception_code, f"unknown exception code {exception_code}")
+
+            # Convert values to uppercase hex string format
+            trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+            protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+            length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+            unit_id_hex = f"{unit_id:02X}"
+            function_code_hex = f"{function_code:02X}"
+            exception_code_hex = f"{exception_code:02X}"
+
+            # Join header and data hex values
+            formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex, exception_code_hex])
+            print(f"Rx\n{formatted_hex}")
+
+            raise ValueError(f"Sent function code {function_code - 0x80}, received exception code {exception_code}: {exception_msg}")
 
         if function_code == WRITE_SINGLE_REGISTER:
             register_address, register_value = struct.unpack(">HH", response_body[1:])
@@ -121,7 +153,7 @@ class ModbusTCPClient:
         elif function_code == READ_INPUT_REGISTERS or function_code == READ_HOLDING_REGISTERS:
             byte_count, *response_data = struct.unpack(">B" + "H" * ((length - 3) // 2), response_body[1:])
         else:
-            raise ValueError(f"Unsupported function code: {function_code}")
+            raise ValueError(f"Received unsupported function code: {function_code}")
         
         # Process and return the response
         return transaction_id, protocol_id, length, unit_id, function_code, byte_count, response_data
@@ -141,7 +173,6 @@ class ModbusTCPClient:
 
     def read_holding_registers(self, address, count, unit=1):
         response = self.send_and_receive(READ_HOLDING_REGISTERS, address, count, unit)
-        print(response)
         return self.parse_word_response(response)
 
     def read_input_registers(self, address, count, unit=1):
@@ -252,13 +283,13 @@ class ModbusTCPClient:
         return result
 
 
-
 # Argument code below
 def check_bit_value(value):
     if value == '0' or value == '1':
         return int(value)
     else:
         raise argparse.ArgumentTypeError("bit_value must be 0 or 1")
+
 
 def check_word_value(value):
     decimal_pattern = re.compile(r'^\d{1,5}$')

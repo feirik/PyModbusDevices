@@ -10,7 +10,7 @@ import ipaddress
 from enum import Enum
 
 # Constants
-VERSION = '0.0.2'
+VERSION = '0.0.3'
 
 # Modbus/TCP Parameters
 MODBUS_PORT = 10502
@@ -67,7 +67,7 @@ exception_codes = {
 }
 
 class ModbusTCPClient:
-    def __init__(self, server, port=502, timeout=5):
+    def __init__(self, server, port=MODBUS_PORT, timeout=5):
         self.server = server
         self.port = port
         self.timeout = timeout
@@ -394,6 +394,7 @@ def check_ipv4_or_hostname(value):
 
 # Command-line arguments parsing
 parser = argparse.ArgumentParser(description='Client ModBus / TCP command line', add_help=False)
+parser.add_argument('ip_address', type=check_ipv4_or_hostname, help='IP address or hostname of the Modbus server', nargs='?', default=opt_server)
 parser.add_argument('-h', '--help', action='store_true', help='show this help message')
 parser.add_argument('-v', '--version', action='store_true', help='show version')
 parser.add_argument('-d', '--dump', action='store_true', help='set dump mode (show tx/rx frame in hex)')
@@ -412,7 +413,6 @@ parser.add_argument('-p', '--port', metavar='port_number', type=check_port_numbe
 parser.add_argument('-a', '--address', metavar='modbus_address', type=check_modbus_address, help='set modbus address (default 0)')
 parser.add_argument('-n', '--number', metavar='value_number', type=check_number_of_values, help='number of values to read')
 parser.add_argument('-t', '--timeout', metavar='timeout', type=check_timeout, help='set timeout seconds (default is 5s)')
-#parser.add_argument('--host', metavar='server_address', action='store_true', type=check_ipv4_or_hostname, help='set the IPv4 address or hostname of the server')
 
 args = parser.parse_args()
 
@@ -474,8 +474,8 @@ if args.number is not None:
 if args.timeout is not None:
     opt_timeout = args.timeout
 
-#if args.server_address is not None:
-#    opt_server = args.server_address
+if args.ip_address is not None:
+    opt_server = args.ip_address
 
 
 # Modbus client initialization

@@ -37,6 +37,8 @@ opt_server = 'localhost'
 opt_server_port = MODBUS_PORT
 opt_function = READ_HOLDING_REGISTERS
 opt_unit_id = 1
+opt_hex = False
+opt_script_mode = False
 opt_modbus_address = 0
 opt_number_of_values = 1
 opt_timeout = 5
@@ -283,6 +285,21 @@ class ModbusTCPClient:
         return result
 
 
+# Support functions
+def print_register_values(result, modbus_address, number_of_values, script_mode=False, print_as_hex=False):
+    if script_mode:
+        csv_values = ";".join([f"{value:05}" for value in result[:number_of_values]])
+        print(csv_values + ";")
+    else:
+        print("\nValues:")
+        for i, value in enumerate(result[:number_of_values], start=1):
+            if print_as_hex:
+                value_str = f"{value:04X}"
+            else:
+                value_str = f"{value:5}"
+            print(f"{i:3} (ad {modbus_address + i - 1:05}): {value_str}")
+
+
 # Argument code below
 def check_bit_value(value):
     if value == '0' or value == '1':
@@ -485,14 +502,17 @@ client.connect()
 try:
     if opt_function == READ_COILS:
         result = client.read_coils(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
-        print("Register values:", result[:opt_number_of_values])
+        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex)
     elif opt_function == READ_DISCRETE_INPUTS:
         result = client.read_discrete_inputs(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
+        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex)
     elif opt_function == READ_HOLDING_REGISTERS:
         result = client.read_holding_registers(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
-        print("Register values:", result[:opt_number_of_values])
+        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex)
     elif opt_function == READ_INPUT_REGISTERS:
         result = client.read_input_registers(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
+        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex)
+
     elif opt_function == WRITE_SINGLE_COIL:
         result = client.write_coil(opt_modbus_address, opt_bit_value, unit=opt_unit_id)
 

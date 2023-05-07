@@ -8,7 +8,7 @@ import sys
 import re
 
 # Constants
-VERSION = '0.0.5'
+VERSION = '0.0.6'
 
 # Modbus/TCP Parameters
 MODBUS_PORT = 10502
@@ -39,6 +39,7 @@ opt_hex = False
 opt_script_mode = False
 opt_float = False
 opt_2c = False
+opt_dump_mode = False
 opt_modbus_address = 0
 opt_number_of_values = 1
 opt_timeout = 5
@@ -69,12 +70,13 @@ exception_codes = {
 }
 
 class ModbusTCPClient:
-    def __init__(self, server, port=MODBUS_PORT, timeout=5):
+    def __init__(self, server, port=MODBUS_PORT, timeout=5, print_debug=False):
         self.server = server
         self.port = port
         self.timeout = timeout
         self.sock = None
         self.transaction_id = 0
+        self.print_debug = print_debug
 
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -98,17 +100,18 @@ class ModbusTCPClient:
             tx_buffer = struct.pack(">HHHBBHH", transaction_id, protocol_id, length, unit_id, function_code, address, bit_value)
             quantity_or_value_hex_values = [f"{(bit_value >> 8) & 0xFF:02X}", f"{bit_value & 0xFF:02X}"]
 
-        # Convert values to uppercase hex string format
-        trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
-        protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
-        length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
-        unit_id_hex = f"{unit_id:02X}"
-        function_code_hex = f"{function_code:02X}"
-        address_hex_values = [f"{(address >> 8) & 0xFF:02X}", f"{address & 0xFF:02X}"]
+        if self.print_debug:
+            # Convert values to uppercase hex string format
+            trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+            protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+            length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+            unit_id_hex = f"{unit_id:02X}"
+            function_code_hex = f"{function_code:02X}"
+            address_hex_values = [f"{(address >> 8) & 0xFF:02X}", f"{address & 0xFF:02X}"]
 
-        # Join header and data hex values
-        formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex] + address_hex_values + quantity_or_value_hex_values)
-        print(f"Tx\n{formatted_hex}")
+            # Join header and data hex values
+            formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex] + address_hex_values + quantity_or_value_hex_values)
+            print(f"Tx\n{formatted_hex}\n")
 
         self.sock.send(tx_buffer)
 
@@ -126,17 +129,18 @@ class ModbusTCPClient:
             exception_code = response_body[1]
             exception_msg = exception_codes.get(exception_code, f"unknown exception code {exception_code}")
 
-            # Convert values to uppercase hex string format
-            trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
-            protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
-            length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
-            unit_id_hex = f"{unit_id:02X}"
-            function_code_hex = f"{function_code:02X}"
-            exception_code_hex = f"{exception_code:02X}"
+            if self.print_debug:
+                # Convert values to uppercase hex string format
+                trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+                protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+                length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+                unit_id_hex = f"{unit_id:02X}"
+                function_code_hex = f"{function_code:02X}"
+                exception_code_hex = f"{exception_code:02X}"
 
-            # Join header and data hex values
-            formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex, exception_code_hex])
-            print(f"Rx\n{formatted_hex}")
+                # Join header and data hex values
+                formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex, exception_code_hex])
+                print(f"Rx\n{formatted_hex}\n")
 
             raise ValueError(f"Sent function code {function_code - 0x80}, received exception code {exception_code}: {exception_msg}")
 
@@ -198,18 +202,19 @@ class ModbusTCPClient:
         # Convert boolean values to integers
         coil_values_int = [int(value) for value in coil_values_bool]
 
-        # Convert values to uppercase hex string format
-        trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
-        protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
-        length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
-        unit_id_hex = f"{unit_id:02X}"
-        function_code_hex = f"{function_code:02X}"
-        byte_count_hex = f"{byte_count:02X}"
-        data_hex_values = [f"{int(value, 2):02X}" for value in response_data]  # Convert binary strings to integers before formatting
+        if self.print_debug:
+            # Convert values to uppercase hex string format
+            trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+            protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+            length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+            unit_id_hex = f"{unit_id:02X}"
+            function_code_hex = f"{function_code:02X}"
+            byte_count_hex = f"{byte_count:02X}"
+            data_hex_values = [f"{int(value, 2):02X}" for value in response_data]  # Convert binary strings to integers before formatting
 
-        # Join header and data hex values
-        formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex, byte_count_hex] + data_hex_values)
-        print(f"Rx\n{formatted_hex}")
+            # Join header and data hex values
+            formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex, byte_count_hex] + data_hex_values)
+            print(f"Rx\n{formatted_hex}\n")
 
         return coil_values_int
 
@@ -219,19 +224,20 @@ class ModbusTCPClient:
 
         # Unpack the register values from the response data
         register_values = response_data
+        
+        if self.print_debug:
+            # Convert values to uppercase hex string format
+            trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+            protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+            length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+            unit_id_hex = f"{unit_id:02X}"
+            function_code_hex = f"{function_code:02X}"
+            byte_count_hex = f"{byte_count:02X}"
+            data_hex_values = [f"{(value >> 8) & 0xFF:02X} {value & 0xFF:02X}" for value in register_values]
 
-        # Convert values to uppercase hex string format
-        trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
-        protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
-        length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
-        unit_id_hex = f"{unit_id:02X}"
-        function_code_hex = f"{function_code:02X}"
-        byte_count_hex = f"{byte_count:02X}"
-        data_hex_values = [f"{(value >> 8) & 0xFF:02X} {value & 0xFF:02X}" for value in register_values]
-
-        # Join header and data hex values
-        formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex, byte_count_hex] + data_hex_values)
-        print(f"Rx\n{formatted_hex}")
+            # Join header and data hex values
+            formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex, byte_count_hex] + data_hex_values)
+            print(f"Rx\n{formatted_hex}\n")
 
         return response_data
 
@@ -245,18 +251,19 @@ class ModbusTCPClient:
         expected_output_value = 0xFF00 if expected_value == 1 else 0x0000
         result = value == expected_output_value
 
-        # Convert values to uppercase hex string format
-        trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
-        protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
-        length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
-        unit_id_hex = f"{unit_id:02X}"
-        function_code_hex = f"{function_code:02X}"
-        address_hex_values = [f"{(address >> 8) & 0xFF:02X}", f"{address & 0xFF:02X}"]
-        value_hex_values = [f"{(value >> 8) & 0xFF:02X}", f"{value & 0xFF:02X}"]
+        if self.print_debug:
+            # Convert values to uppercase hex string format
+            trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+            protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+            length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+            unit_id_hex = f"{unit_id:02X}"
+            function_code_hex = f"{function_code:02X}"
+            address_hex_values = [f"{(address >> 8) & 0xFF:02X}", f"{address & 0xFF:02X}"]
+            value_hex_values = [f"{(value >> 8) & 0xFF:02X}", f"{value & 0xFF:02X}"]
 
-        # Join header and data hex values
-        formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex] + address_hex_values + value_hex_values)
-        print(f"Rx\n{formatted_hex}")
+            # Join header and data hex values
+            formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex] + address_hex_values + value_hex_values)
+            print(f"Rx\n{formatted_hex}\n")
 
         return result
 
@@ -269,18 +276,19 @@ class ModbusTCPClient:
         # Check if the response value matches the expected value
         result = value == expected_value
 
-        # Convert values to uppercase hex string format
-        trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
-        protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
-        length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
-        unit_id_hex = f"{unit_id:02X}"
-        function_code_hex = f"{function_code:02X}"
-        address_hex_values = [f"{(address >> 8) & 0xFF:02X}", f"{address & 0xFF:02X}"]
-        value_hex_values = [f"{(value >> 8) & 0xFF:02X}", f"{value & 0xFF:02X}"]
+        if self.print_debug:
+            # Convert values to uppercase hex string format
+            trans_id_hex_values = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+            protocol_id_hex_values = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+            length_hex_values = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+            unit_id_hex = f"{unit_id:02X}"
+            function_code_hex = f"{function_code:02X}"
+            address_hex_values = [f"{(address >> 8) & 0xFF:02X}", f"{address & 0xFF:02X}"]
+            value_hex_values = [f"{(value >> 8) & 0xFF:02X}", f"{value & 0xFF:02X}"]
 
-        # Join header and data hex values
-        formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex] + address_hex_values + value_hex_values)
-        print(f"Rx\n{formatted_hex}")
+            # Join header and data hex values
+            formatted_hex = " ".join(["[" + " ".join(trans_id_hex_values + protocol_id_hex_values + length_hex_values + [unit_id_hex]) + "]"] + [function_code_hex] + address_hex_values + value_hex_values)
+            print(f"Rx\n{formatted_hex}\n")
 
         return result
 
@@ -290,7 +298,7 @@ def print_register_values(result, modbus_address, number_of_values, script_mode=
         csv_values = ";".join([f"{value:05}" for value in result[:number_of_values]])
         print(csv_values + ";")
     else:
-        print("\nValues:")
+        print("Values:")
         if print_float:
             # Combine every two consecutive registers to create 32-bit floats
             float_result = [struct.unpack('!f', struct.pack('!HH', result[i], result[i+1]))[0] for i in range(0, len(result), 2)]
@@ -308,7 +316,7 @@ def print_register_values(result, modbus_address, number_of_values, script_mode=
                 print(f"{i:3} (ad {modbus_address + i - 1:05}): {value_str}")
 
 
-# Argument code below
+# Argument parsing support functions
 def check_bit_value(value):
     if value == '0' or value == '1':
         return int(value)
@@ -417,129 +425,129 @@ def check_ipv4_or_hostname(value):
     raise argparse.ArgumentTypeError("Invalid IPv4 address or hostname")
 
 
-# Command-line arguments parsing
-parser = argparse.ArgumentParser(description='Client ModBus / TCP command line', add_help=False)
-parser.add_argument('ip_address', type=check_ipv4_or_hostname, help='IP address or hostname of the Modbus server', nargs='?', default=opt_server)
-parser.add_argument('-h', '--help', action='store_true', help='show this help message')
-parser.add_argument('-v', '--version', action='store_true', help='show version')
-parser.add_argument('-d', '--dump', action='store_true', help='set dump mode (show tx/rx frame in hex)')
-parser.add_argument('-s', '--script', action='store_true', help='set script mode (csv on stdout)')
-parser.add_argument('-r1', '--read1', action='store_true', help='read bit(s) (function 1)')
-parser.add_argument('-r2', '--read2', action='store_true', help='read bit(s) (function 2)')
-parser.add_argument('-r3', '--read3', action='store_true', help='read word(s) (function 3)')
-parser.add_argument('-r4', '--read4', action='store_true', help='read word(s) (function 4)')
-parser.add_argument('-w5', '--write5', metavar='bit_value', type=check_bit_value, help='write a bit (function 5)')
-parser.add_argument('-w6', '--write6', metavar='word_value', type=check_word_value, help='write a word (function 6)')
-parser.add_argument('-f', '--float', action='store_true', help='set floating point value')
-parser.add_argument('-2c', '--twos_complement', action='store_true', help="set 'two's complement' mode for register read")
-parser.add_argument('--hex', action='store_true', help='show value in hex (default is decimal)')
-parser.add_argument('-u', '--unit_id', metavar='unit_id', type=int, help='set the modbus "unit id"')
-parser.add_argument('-p', '--port', metavar='port_number', type=check_port_number, help='set TCP port (default 502)')
-parser.add_argument('-a', '--address', metavar='modbus_address', type=check_modbus_address, help='set modbus address (default 0)')
-parser.add_argument('-n', '--number', metavar='value_number', type=check_number_of_values, help='number of values to read')
-parser.add_argument('-t', '--timeout', metavar='timeout', type=check_timeout, help='set timeout seconds (default is 5s)')
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Client ModBus / TCP command line', add_help=False)
+    parser.add_argument('ip_address', type=check_ipv4_or_hostname, help='IP address or hostname of the Modbus server', nargs='?', default=opt_server)
+    parser.add_argument('-h', '--help', action='store_true', help='show this help message')
+    parser.add_argument('-v', '--version', action='store_true', help='show version')
+    parser.add_argument('-d', '--dump', action='store_true', help='set dump mode (show tx/rx frame in hex)')
+    parser.add_argument('-s', '--script', action='store_true', help='set script mode (csv on stdout)')
+    parser.add_argument('-r1', '--read1', action='store_true', help='read bit(s) (function 1)')
+    parser.add_argument('-r2', '--read2', action='store_true', help='read bit(s) (function 2)')
+    parser.add_argument('-r3', '--read3', action='store_true', help='read word(s) (function 3)')
+    parser.add_argument('-r4', '--read4', action='store_true', help='read word(s) (function 4)')
+    parser.add_argument('-w5', '--write5', metavar='bit_value', type=check_bit_value, help='write a bit (function 5)')
+    parser.add_argument('-w6', '--write6', metavar='word_value', type=check_word_value, help='write a word (function 6)')
+    parser.add_argument('-f', '--float', action='store_true', help='set floating point value')
+    parser.add_argument('-2c', '--twos_complement', action='store_true', help="set 'two's complement' mode for register read")
+    parser.add_argument('--hex', action='store_true', help='show value in hex (default is decimal)')
+    parser.add_argument('-u', '--unit_id', metavar='unit_id', type=int, help='set the modbus "unit id"')
+    parser.add_argument('-p', '--port', metavar='port_number', type=check_port_number, help='set TCP port (default 502)')
+    parser.add_argument('-a', '--address', metavar='modbus_address', type=check_modbus_address, help='set modbus address (default 0)')
+    parser.add_argument('-n', '--number', metavar='value_number', type=check_number_of_values, help='number of values to read')
+    parser.add_argument('-t', '--timeout', metavar='timeout', type=check_timeout, help='set timeout seconds (default is 5s)')
 
-args = parser.parse_args()
+    args = parser.parse_args()
 
-if args.help:
-    parser.print_help()
-    sys.exit()
+    if args.help:
+        parser.print_help()
+        sys.exit()
 
-if args.version:
-    print(VERSION)
-    sys.exit()
+    if args.version:
+        print(VERSION)
+        sys.exit()
 
-if args.dump:
-    opt_dump_mode = True
+    if args.dump:
+        opt_dump_mode = True
 
-if args.script:
-    opt_script_mode = True
+    if args.script:
+        opt_script_mode = True
 
-if args.read1:
-    opt_function = READ_COILS
+    if args.read1:
+        opt_function = READ_COILS
 
-if args.read2:
-    opt_function = READ_DISCRETE_INPUTS
+    if args.read2:
+        opt_function = READ_DISCRETE_INPUTS
 
-if args.read3:
-    opt_function = READ_HOLDING_REGISTERS
+    if args.read3:
+        opt_function = READ_HOLDING_REGISTERS
 
-if args.read4:
-    opt_function = READ_INPUT_REGISTERS
+    if args.read4:
+        opt_function = READ_INPUT_REGISTERS
 
-if args.write5 is not None:
-    opt_function = WRITE_SINGLE_COIL
-    opt_bit_value = args.write5
+    if args.write5 is not None:
+        opt_function = WRITE_SINGLE_COIL
+        opt_bit_value = args.write5
 
-if args.write6 is not None:
-    opt_function = WRITE_SINGLE_REGISTER
-    opt_word_value = args.write6
+    if args.write6 is not None:
+        opt_function = WRITE_SINGLE_REGISTER
+        opt_word_value = args.write6
 
-if args.twos_complement:
-    opt_2c = True
+    if args.twos_complement:
+        opt_2c = True
 
-if args.hex:
-    opt_hex = True
+    if args.hex:
+        opt_hex = True
 
-if args.unit_id is not None:
-    opt_unit_id = args.unit_id
+    if args.unit_id is not None:
+        opt_unit_id = args.unit_id
 
-if args.port is not None:
-    opt_server_port = args.port
+    if args.port is not None:
+        opt_server_port = args.port
 
-if args.address is not None:
-    opt_modbus_address = args.address
+    if args.address is not None:
+        opt_modbus_address = args.address
 
-if args.number is not None:
-    opt_number_of_values = args.number
+    if args.number is not None:
+        opt_number_of_values = args.number
 
-if args.float:
-    opt_float = True
-    # Reading float requires 2 registers to be read per output value
-    opt_number_of_values *= 2
+    if args.float:
+        opt_float = True
+        # Reading float requires 2 registers to be read per output value
+        opt_number_of_values *= 2
 
-if args.timeout is not None:
-    opt_timeout = args.timeout
+    if args.timeout is not None:
+        opt_timeout = args.timeout
 
-if args.ip_address is not None:
-    opt_server = args.ip_address
+    if args.ip_address is not None:
+        opt_server = args.ip_address
 
 
-# Modbus client initialization
-client = ModbusTCPClient(opt_server, port=opt_server_port, timeout=opt_timeout)
-client.connect()
+    # Modbus client initialization
+    client = ModbusTCPClient(opt_server, port=opt_server_port, timeout=opt_timeout, print_debug=opt_dump_mode)
+    client.connect()
 
-try:
-    if opt_function == READ_COILS:
-        result = client.read_coils(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
-        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex)
-    elif opt_function == READ_DISCRETE_INPUTS:
-        result = client.read_discrete_inputs(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
-        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex)
-    elif opt_function == READ_HOLDING_REGISTERS:
-        result = client.read_holding_registers(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
-        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex, opt_float, opt_2c)
-    elif opt_function == READ_INPUT_REGISTERS:
-        result = client.read_input_registers(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
-        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex, opt_float, opt_2c)
+    try:
+        if opt_function == READ_COILS:
+            result = client.read_coils(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
+            print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex)
+        elif opt_function == READ_DISCRETE_INPUTS:
+            result = client.read_discrete_inputs(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
+            print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex)
+        elif opt_function == READ_HOLDING_REGISTERS:
+            result = client.read_holding_registers(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
+            print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex, opt_float, opt_2c)
+        elif opt_function == READ_INPUT_REGISTERS:
+            result = client.read_input_registers(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
+            print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex, opt_float, opt_2c)
 
-    elif opt_function == WRITE_SINGLE_COIL:
-        result = client.write_coil(opt_modbus_address, opt_bit_value, unit=opt_unit_id)
+        elif opt_function == WRITE_SINGLE_COIL:
+            result = client.write_coil(opt_modbus_address, opt_bit_value, unit=opt_unit_id)
 
-        if result:
-            print("bit write ok")
-        else:
-            print("bit write failed")
-        
-    elif opt_function == WRITE_SINGLE_REGISTER:
-        result = client.write_register(opt_modbus_address, opt_word_value, unit=opt_unit_id)
+            if result:
+                print("bit write ok")
+            else:
+                print("bit write failed")
+            
+        elif opt_function == WRITE_SINGLE_REGISTER:
+            result = client.write_register(opt_modbus_address, opt_word_value, unit=opt_unit_id)
 
-        if result:
-            print("word write ok")
-        else:
-            print("word write failed")
+            if result:
+                print("word write ok")
+            else:
+                print("word write failed")
 
-except Exception as e:
-    print("Error:", str(e))
+    except Exception as e:
+        print("Error:", str(e))
 
-client.close()
+    client.close()

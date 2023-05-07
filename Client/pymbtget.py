@@ -6,11 +6,9 @@ import random
 import struct
 import sys
 import re
-import ipaddress
-from enum import Enum
 
 # Constants
-VERSION = '0.0.4'
+VERSION = '0.0.5'
 
 # Modbus/TCP Parameters
 MODBUS_PORT = 10502
@@ -40,6 +38,7 @@ opt_unit_id = 1
 opt_hex = False
 opt_script_mode = False
 opt_float = False
+opt_2c = False
 opt_modbus_address = 0
 opt_number_of_values = 1
 opt_timeout = 5
@@ -286,7 +285,7 @@ class ModbusTCPClient:
         return result
 
 
-def print_register_values(result, modbus_address, number_of_values, script_mode=False, print_as_hex=False, print_float=False):
+def print_register_values(result, modbus_address, number_of_values, script_mode=False, print_as_hex=False, print_float=False, two_comp=False):
     if script_mode:
         csv_values = ";".join([f"{value:05}" for value in result[:number_of_values]])
         print(csv_values + ";")
@@ -300,6 +299,8 @@ def print_register_values(result, modbus_address, number_of_values, script_mode=
                 print(f"{i:3} (ad {modbus_address + (i - 1) * 2:05}): {value_str}")
         else:
             for i, value in enumerate(result[:number_of_values], start=1):
+                if two_comp and not print_as_hex:
+                    value = value - (value & (2 ** 15)) * 2
                 if print_as_hex:
                     value_str = f"{value:04X}"
                 else:
@@ -475,7 +476,7 @@ if args.write6 is not None:
     opt_word_value = args.write6
 
 if args.twos_complement:
-    opt_twos_complement = True
+    opt_2c = True
 
 if args.hex:
     opt_hex = True
@@ -517,10 +518,10 @@ try:
         print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex)
     elif opt_function == READ_HOLDING_REGISTERS:
         result = client.read_holding_registers(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
-        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex, opt_float)
+        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex, opt_float, opt_2c)
     elif opt_function == READ_INPUT_REGISTERS:
         result = client.read_input_registers(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
-        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex, opt_float)
+        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex, opt_float, opt_2c)
 
     elif opt_function == WRITE_SINGLE_COIL:
         result = client.write_coil(opt_modbus_address, opt_bit_value, unit=opt_unit_id)
@@ -537,29 +538,6 @@ try:
             print("word write ok")
         else:
             print("word write failed")
-
-    
-
-    # if result.isError():
-    #     print("Error:", exception_codes[result.exception_code])
-    # else:
-    #     if opt_function in (READ_COILS, READ_DISCRETE_INPUTS):
-    #         if opt_script_mode:
-    #             print(','.join([str(int(bit)) for bit in result.bits]))
-    #         else:
-    #             print("Bit values:", [int(bit) for bit in result.bits])
-    #     elif opt_function in (READ_HOLDING_REGISTERS, READ_INPUT_REGISTERS):
-    #         if opt_float:
-    #             values = [decode_float32(result.registers[i:i+2]) for i in range(0, len(result.registers), 2)]
-    #         elif opt_twos_complement:
-    #             values = [twos_complement_to_int(reg) for reg in result.registers]
-    #         else:
-    #             values = result.registers
-
-    #         if opt_script_mode:
-    #             print(','.join([str(value) for value in values]))
-    #         else:
-    #             print("Register values:", values)
 
 except Exception as e:
     print("Error:", str(e))

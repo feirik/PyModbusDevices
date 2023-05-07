@@ -10,7 +10,7 @@ import ipaddress
 from enum import Enum
 
 # Constants
-VERSION = '0.0.3'
+VERSION = '0.0.4'
 
 # Modbus/TCP Parameters
 MODBUS_PORT = 10502
@@ -39,6 +39,7 @@ opt_function = READ_HOLDING_REGISTERS
 opt_unit_id = 1
 opt_hex = False
 opt_script_mode = False
+opt_float = False
 opt_modbus_address = 0
 opt_number_of_values = 1
 opt_timeout = 5
@@ -285,19 +286,25 @@ class ModbusTCPClient:
         return result
 
 
-# Support functions
-def print_register_values(result, modbus_address, number_of_values, script_mode=False, print_as_hex=False):
+def print_register_values(result, modbus_address, number_of_values, script_mode=False, print_as_hex=False, print_float=False):
     if script_mode:
         csv_values = ";".join([f"{value:05}" for value in result[:number_of_values]])
         print(csv_values + ";")
     else:
         print("\nValues:")
-        for i, value in enumerate(result[:number_of_values], start=1):
-            if print_as_hex:
-                value_str = f"{value:04X}"
-            else:
-                value_str = f"{value:5}"
-            print(f"{i:3} (ad {modbus_address + i - 1:05}): {value_str}")
+        if print_float:
+            # Combine every two consecutive registers to create 32-bit floats
+            float_result = [struct.unpack('!f', struct.pack('!HH', result[i], result[i+1]))[0] for i in range(0, len(result), 2)]
+            for i, value in enumerate(float_result, start=1):
+                value_str = f"{value:.6f}"
+                print(f"{i:3} (ad {modbus_address + (i - 1) * 2:05}): {value_str}")
+        else:
+            for i, value in enumerate(result[:number_of_values], start=1):
+                if print_as_hex:
+                    value_str = f"{value:04X}"
+                else:
+                    value_str = f"{value:5}"
+                print(f"{i:3} (ad {modbus_address + i - 1:05}): {value_str}")
 
 
 # Argument code below
@@ -467,9 +474,6 @@ if args.write6 is not None:
     opt_function = WRITE_SINGLE_REGISTER
     opt_word_value = args.write6
 
-if args.float:
-    opt_float = True
-
 if args.twos_complement:
     opt_twos_complement = True
 
@@ -487,6 +491,11 @@ if args.address is not None:
 
 if args.number is not None:
     opt_number_of_values = args.number
+
+if args.float:
+    opt_float = True
+    # Reading float requires 2 registers to be read per output value
+    opt_number_of_values *= 2
 
 if args.timeout is not None:
     opt_timeout = args.timeout
@@ -508,10 +517,10 @@ try:
         print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex)
     elif opt_function == READ_HOLDING_REGISTERS:
         result = client.read_holding_registers(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
-        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex)
+        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex, opt_float)
     elif opt_function == READ_INPUT_REGISTERS:
         result = client.read_input_registers(opt_modbus_address, opt_number_of_values, unit=opt_unit_id)
-        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex)
+        print_register_values(result, opt_modbus_address, opt_number_of_values, opt_script_mode, opt_hex, opt_float)
 
     elif opt_function == WRITE_SINGLE_COIL:
         result = client.write_coil(opt_modbus_address, opt_bit_value, unit=opt_unit_id)

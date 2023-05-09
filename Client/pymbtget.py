@@ -8,7 +8,7 @@ import sys
 import re
 
 # Constants
-VERSION = '0.0.7'
+VERSION = '0.0.8'
 
 # Modbus/TCP Parameters
 MODBUS_PORT = 10502
@@ -53,6 +53,16 @@ COIL_ON = 0xFF00
 COIL_OFF = 0x0000
 RESPONSE_HEADER_LENGTH = 7
 EXCEPTION_FC_BASE = 0x80
+WRITE_SINGLE_BYTE_COUNT = 4
+READ_HDR_SIZE = 3
+REG_SIZE = 2
+MAX_UINT8 = 255
+MAX_UINT16 = 65535
+HEX_BASE = 16
+MAX_REGISTERS_PER_READ = 125
+MAX_TIMEOUT = 120
+
+
 
 # Function codes dictionary
 function_codes = {
@@ -154,18 +164,18 @@ class ModbusTCPClient:
 
         if function_code == WRITE_SINGLE_REGISTER:
             register_address, register_value = struct.unpack(">HH", response_body[1:])
-            byte_count = 4  # 2 bytes for address and 2 bytes for value
+            byte_count = WRITE_SINGLE_BYTE_COUNT  # 2 bytes for address and 2 bytes for value
             response_data = (register_address, register_value)
         elif function_code == WRITE_SINGLE_COIL:
             output_address, output_value = struct.unpack(">HH", response_body[1:])
-            byte_count = 4  # 2 bytes for address and 2 bytes for value
+            byte_count = WRITE_SINGLE_BYTE_COUNT  # 2 bytes for address and 2 bytes for value
             response_data = (output_address, output_value)
         elif function_code == READ_COILS or function_code == READ_DISCRETE_INPUTS:
             byte_count = response_body[1]
             data = response_body[2:]
             response_data = [format(b, '08b') for b in data]
         elif function_code == READ_INPUT_REGISTERS or function_code == READ_HOLDING_REGISTERS:
-            byte_count, *response_data = struct.unpack(">B" + "H" * ((length - 3) // 2), response_body[1:])
+            byte_count, *response_data = struct.unpack(">B" + "H" * ((length - READ_HDR_SIZE) // REG_SIZE), response_body[1:])
         else:
             raise ValueError(f"Received unsupported function code: {function_code}")
         
@@ -256,7 +266,7 @@ class ModbusTCPClient:
         address, value = response_data
 
         # Check if the response value matches the expected value
-        expected_output_value = 0xFF00 if expected_value == 1 else 0x0000
+        expected_output_value = COIL_ON if expected_value == 1 else COIL_OFF
         result = value == expected_output_value
 
         if self.print_debug:
@@ -267,10 +277,10 @@ class ModbusTCPClient:
             unit_hex = f"{unit_id:02X}"
             func_hex = f"{function_code:02X}"
             addr_hex = [f"{(address >> 8) & 0xFF:02X}", f"{address & 0xFF:02X}"]
-            value_hex_values = [f"{(value >> 8) & 0xFF:02X}", f"{value & 0xFF:02X}"]
+            value_hex = [f"{(value >> 8) & 0xFF:02X}", f"{value & 0xFF:02X}"]
 
             # Join header and data hex values
-            formatted_hex = " ".join(["[" + " ".join(tra_hex + proto_hex + len_hex + [unit_hex]) + "]"] + [func_hex] + addr_hex + value_hex_values)
+            formatted_hex = " ".join(["[" + " ".join(tra_hex + proto_hex + len_hex + [unit_hex]) + "]"] + [func_hex] + addr_hex + value_hex)
             print(f"Rx\n{formatted_hex}\n")
 
         return result
@@ -292,10 +302,10 @@ class ModbusTCPClient:
             unit_hex = f"{unit_id:02X}"
             func_hex = f"{function_code:02X}"
             addr_hex = [f"{(address >> 8) & 0xFF:02X}", f"{address & 0xFF:02X}"]
-            value_hex_values = [f"{(value >> 8) & 0xFF:02X}", f"{value & 0xFF:02X}"]
+            value_hex = [f"{(value >> 8) & 0xFF:02X}", f"{value & 0xFF:02X}"]
 
             # Join header and data hex values
-            formatted_hex = " ".join(["[" + " ".join(tra_hex + proto_hex + len_hex + [unit_hex]) + "]"] + [func_hex] + addr_hex + value_hex_values)
+            formatted_hex = " ".join(["[" + " ".join(tra_hex + proto_hex + len_hex + [unit_hex]) + "]"] + [func_hex] + addr_hex + value_hex)
             print(f"Rx\n{formatted_hex}\n")
 
         return result
@@ -338,11 +348,11 @@ def check_word_value(value):
 
     if decimal_pattern.match(value):
         int_value = int(value)
-        if 0 <= int_value <= 65535:
+        if 0 <= int_value <= MAX_UINT16:
             return int_value
     elif hex_pattern.match(value):
-        int_value = int(value, 16)
-        if 0 <= int_value <= 65535:
+        int_value = int(value, HEX_BASE)
+        if 0 <= int_value <= MAX_UINT16:
             return int_value
 
     raise argparse.ArgumentTypeError("word_value must be between 0 and 65535, either in decimal or hexadecimal format")
@@ -354,11 +364,11 @@ def check_unit_id(value):
 
     if decimal_pattern.match(value):
         int_value = int(value)
-        if 1 <= int_value <= 255:
+        if 1 <= int_value <= MAX_UINT8:
             return int_value
     elif hex_pattern.match(value):
-        int_value = int(value, 16)
-        if 1 <= int_value <= 255:
+        int_value = int(value, HEX_BASE)
+        if 1 <= int_value <= MAX_UINT8:
             return int_value
 
     raise argparse.ArgumentTypeError("unit_id must be between 1 and 255, either in decimal or hexadecimal format")
@@ -370,11 +380,11 @@ def check_port_number(value):
 
     if decimal_pattern.match(value):
         int_value = int(value)
-        if 1 <= int_value <= 65535:
+        if 1 <= int_value <= MAX_UINT16:
             return int_value
     elif hex_pattern.match(value):
-        int_value = int(value, 16)
-        if 1 <= int_value <= 65535:
+        int_value = int(value, HEX_BASE)
+        if 1 <= int_value <= MAX_UINT16:
             return int_value
 
     raise argparse.ArgumentTypeError("port_number must be between 1 and 65535, either in decimal or hexadecimal format")
@@ -386,11 +396,11 @@ def check_modbus_address(value):
 
     if decimal_pattern.match(value):
         int_value = int(value)
-        if 0 <= int_value <= 65535:
+        if 0 <= int_value <= MAX_UINT16:
             return int_value
     elif hex_pattern.match(value):
-        int_value = int(value, 16)
-        if 0 <= int_value <= 65535:
+        int_value = int(value, HEX_BASE)
+        if 0 <= int_value <= MAX_UINT16:
             return int_value
 
     raise argparse.ArgumentTypeError("modbus_address must be between 0 and 65535, either in decimal or hexadecimal format")
@@ -402,11 +412,11 @@ def check_number_of_values(value):
 
     if decimal_pattern.match(value):
         int_value = int(value)
-        if 1 <= int_value <= 125:
+        if 1 <= int_value <= MAX_REGISTERS_PER_READ:
             return int_value
     elif hex_pattern.match(value):
-        int_value = int(value, 16)
-        if 1 <= int_value <= 125:
+        int_value = int(value, HEX_BASE)
+        if 1 <= int_value <= MAX_REGISTERS_PER_READ:
             return int_value
 
     raise argparse.ArgumentTypeError("value_number must be between 1 and 125, either in decimal or hexadecimal format")
@@ -417,7 +427,7 @@ def check_timeout(value):
 
     if pattern.match(value):
         int_value = int(value)
-        if 0 < int_value < 120:
+        if 0 < int_value < MAX_TIMEOUT:
             return int_value
 
     raise argparse.ArgumentTypeError("timeout must be a positive integer less than 120 seconds")
@@ -446,7 +456,7 @@ if __name__ == '__main__':
     parser.add_argument('-r4', '--read4', action='store_true', help='read word(s) (function 4)')
     parser.add_argument('-w5', '--write5', metavar='bit_value', type=check_bit_value, help='write a bit (function 5)')
     parser.add_argument('-w6', '--write6', metavar='word_value', type=check_word_value, help='write a word (function 6)')
-    parser.add_argument('-f', '--float', action='store_true', help='set floating point value')
+    parser.add_argument('-f', '--float', action='store_true', help='read registers as floating point value')
     parser.add_argument('-2c', '--twos_complement', action='store_true', help="set 'two's complement' mode for register read")
     parser.add_argument('--hex', action='store_true', help='show value in hex (default is decimal)')
     parser.add_argument('-u', '--unit_id', metavar='unit_id', type=int, help='set the modbus "unit id"')

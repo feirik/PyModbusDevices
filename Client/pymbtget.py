@@ -8,10 +8,11 @@ import sys
 import re
 
 # Constants
-VERSION = '0.0.8'
+VERSION = '0.0.9'
 
 # Modbus/TCP Parameters
 MODBUS_PORT = 10502
+
 # Function codes
 READ_COILS = 0x01
 READ_DISCRETE_INPUTS = 0x02
@@ -19,6 +20,7 @@ READ_HOLDING_REGISTERS = 0x03
 READ_INPUT_REGISTERS = 0x04
 WRITE_SINGLE_COIL = 0x05
 WRITE_SINGLE_REGISTER = 0x06
+
 # Exception codes
 EXP_ILLEGAL_FUNCTION = 0x01
 EXP_DATA_ADDRESS = 0x02
@@ -49,6 +51,7 @@ opt_bit_value = 0
 # Constants
 MAX_TRANSACTION_ID = 65535
 MODBUS_REQUEST_LENGTH = 6
+BYTE_SHIFT = 8
 COIL_ON = 0xFF00
 COIL_OFF = 0x0000
 RESPONSE_HEADER_LENGTH = 7
@@ -61,8 +64,7 @@ MAX_UINT16 = 65535
 HEX_BASE = 16
 MAX_REGISTERS_PER_READ = 125
 MAX_TIMEOUT = 120
-
-
+SIGN_BIT_POSITION = 15
 
 # Function codes dictionary
 function_codes = {
@@ -112,20 +114,20 @@ class ModbusTCPClient:
 
         if function_code in [READ_COILS, READ_DISCRETE_INPUTS, READ_HOLDING_REGISTERS, READ_INPUT_REGISTERS, WRITE_SINGLE_REGISTER]:
             tx_buffer = struct.pack(">HHHBBHH", transaction_id, protocol_id, length, unit_id, function_code, address, quantity_or_value)
-            quant_or_val_hex = [f"{(quantity_or_value >> 8) & 0xFF:02X}", f"{quantity_or_value & 0xFF:02X}"]
+            quant_or_val_hex = [f"{(quantity_or_value >> BYTE_SHIFT) & 0xFF:02X}", f"{quantity_or_value & 0xFF:02X}"]
         elif function_code == WRITE_SINGLE_COIL:
             bit_value = COIL_ON if quantity_or_value == 1 else COIL_OFF
             tx_buffer = struct.pack(">HHHBBHH", transaction_id, protocol_id, length, unit_id, function_code, address, bit_value)
-            quant_or_val_hex = [f"{(bit_value >> 8) & 0xFF:02X}", f"{bit_value & 0xFF:02X}"]
+            quant_or_val_hex = [f"{(bit_value >> BYTE_SHIFT) & 0xFF:02X}", f"{bit_value & 0xFF:02X}"]
 
         if self.print_debug:
             # Convert values to uppercase hex string format
-            tra_hex = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
-            proto_hex = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
-            len_hex = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+            tra_hex = [f"{(transaction_id >> BYTE_SHIFT) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+            proto_hex = [f"{(protocol_id >> BYTE_SHIFT) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+            len_hex = [f"{(length >> BYTE_SHIFT) & 0xFF:02X}", f"{length & 0xFF:02X}"]
             unit_hex = f"{unit_id:02X}"
             func_hex = f"{function_code:02X}"
-            addr_hex = [f"{(address >> 8) & 0xFF:02X}", f"{address & 0xFF:02X}"]
+            addr_hex = [f"{(address >> BYTE_SHIFT) & 0xFF:02X}", f"{address & 0xFF:02X}"]
 
             # Join header and data hex values
             formatted_hex = " ".join(["[" + " ".join(tra_hex + proto_hex + len_hex + [unit_hex]) + "]"] + [func_hex] + addr_hex + quant_or_val_hex)
@@ -149,9 +151,9 @@ class ModbusTCPClient:
 
             if self.print_debug:
                 # Convert values to uppercase hex string format
-                tra_hex = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
-                proto_hex = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
-                len_hex = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+                tra_hex = [f"{(transaction_id >> BYTE_SHIFT) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+                proto_hex = [f"{(protocol_id >> BYTE_SHIFT) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+                len_hex = [f"{(length >> BYTE_SHIFT) & 0xFF:02X}", f"{length & 0xFF:02X}"]
                 unit_hex = f"{unit_id:02X}"
                 func_hex = f"{function_code:02X}"
                 except_hex = f"{exception_code:02X}"
@@ -222,9 +224,9 @@ class ModbusTCPClient:
 
         if self.print_debug:
             # Convert values to uppercase hex string format
-            tra_hex = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
-            proto_hex = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
-            len_hex = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+            tra_hex = [f"{(transaction_id >> BYTE_SHIFT) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+            proto_hex = [f"{(protocol_id >> BYTE_SHIFT) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+            len_hex = [f"{(length >> BYTE_SHIFT) & 0xFF:02X}", f"{length & 0xFF:02X}"]
             unit_hex = f"{unit_id:02X}"
             func_hex = f"{function_code:02X}"
             byte_count_hex = f"{byte_count:02X}"
@@ -245,13 +247,13 @@ class ModbusTCPClient:
         
         if self.print_debug:
             # Convert values to uppercase hex string format
-            tra_hex = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
-            proto_hex = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
-            len_hex = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+            tra_hex = [f"{(transaction_id >> BYTE_SHIFT) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+            proto_hex = [f"{(protocol_id >> BYTE_SHIFT) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+            len_hex = [f"{(length >> BYTE_SHIFT) & 0xFF:02X}", f"{length & 0xFF:02X}"]
             unit_hex = f"{unit_id:02X}"
             func_hex = f"{function_code:02X}"
             byte_count_hex = f"{byte_count:02X}"
-            data_hex_values = [f"{(value >> 8) & 0xFF:02X} {value & 0xFF:02X}" for value in register_values]
+            data_hex_values = [f"{(value >> BYTE_SHIFT) & 0xFF:02X} {value & 0xFF:02X}" for value in register_values]
 
             # Join header and data hex values
             formatted_hex = " ".join(["[" + " ".join(tra_hex + proto_hex + len_hex + [unit_hex]) + "]"] + [func_hex, byte_count_hex] + data_hex_values)
@@ -271,13 +273,13 @@ class ModbusTCPClient:
 
         if self.print_debug:
             # Convert values to uppercase hex string format
-            tra_hex = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
-            proto_hex = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
-            len_hex = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+            tra_hex = [f"{(transaction_id >> BYTE_SHIFT) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+            proto_hex = [f"{(protocol_id >> BYTE_SHIFT) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+            len_hex = [f"{(length >> BYTE_SHIFT) & 0xFF:02X}", f"{length & 0xFF:02X}"]
             unit_hex = f"{unit_id:02X}"
             func_hex = f"{function_code:02X}"
-            addr_hex = [f"{(address >> 8) & 0xFF:02X}", f"{address & 0xFF:02X}"]
-            value_hex = [f"{(value >> 8) & 0xFF:02X}", f"{value & 0xFF:02X}"]
+            addr_hex = [f"{(address >> BYTE_SHIFT) & 0xFF:02X}", f"{address & 0xFF:02X}"]
+            value_hex = [f"{(value >> BYTE_SHIFT) & 0xFF:02X}", f"{value & 0xFF:02X}"]
 
             # Join header and data hex values
             formatted_hex = " ".join(["[" + " ".join(tra_hex + proto_hex + len_hex + [unit_hex]) + "]"] + [func_hex] + addr_hex + value_hex)
@@ -296,13 +298,13 @@ class ModbusTCPClient:
 
         if self.print_debug:
             # Convert values to uppercase hex string format
-            tra_hex = [f"{(transaction_id >> 8) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
-            proto_hex = [f"{(protocol_id >> 8) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
-            len_hex = [f"{(length >> 8) & 0xFF:02X}", f"{length & 0xFF:02X}"]
+            tra_hex = [f"{(transaction_id >> BYTE_SHIFT) & 0xFF:02X}", f"{transaction_id & 0xFF:02X}"]
+            proto_hex = [f"{(protocol_id >> BYTE_SHIFT) & 0xFF:02X}", f"{protocol_id & 0xFF:02X}"]
+            len_hex = [f"{(length >> BYTE_SHIFT) & 0xFF:02X}", f"{length & 0xFF:02X}"]
             unit_hex = f"{unit_id:02X}"
             func_hex = f"{function_code:02X}"
-            addr_hex = [f"{(address >> 8) & 0xFF:02X}", f"{address & 0xFF:02X}"]
-            value_hex = [f"{(value >> 8) & 0xFF:02X}", f"{value & 0xFF:02X}"]
+            addr_hex = [f"{(address >> BYTE_SHIFT) & 0xFF:02X}", f"{address & 0xFF:02X}"]
+            value_hex = [f"{(value >> BYTE_SHIFT) & 0xFF:02X}", f"{value & 0xFF:02X}"]
 
             # Join header and data hex values
             formatted_hex = " ".join(["[" + " ".join(tra_hex + proto_hex + len_hex + [unit_hex]) + "]"] + [func_hex] + addr_hex + value_hex)
@@ -326,7 +328,7 @@ def print_register_values(result, modbus_address, number_of_values, script_mode=
         else:
             for i, value in enumerate(result[:number_of_values], start=1):
                 if two_comp and not print_as_hex:
-                    value = value - (value & (2 ** 15)) * 2
+                    value = value - (value & (2 ** SIGN_BIT_POSITION)) * 2
                 if print_as_hex:
                     value_str = f"{value:04X}"
                 else:
@@ -529,7 +531,6 @@ if __name__ == '__main__':
 
     if args.ip_address is not None:
         opt_server = args.ip_address
-
 
     # Modbus client initialization
     client = ModbusTCPClient(opt_server, port=opt_server_port, timeout=opt_timeout, print_debug=opt_dump_mode)

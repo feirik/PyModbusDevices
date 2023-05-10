@@ -64,7 +64,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         self.assertEqual(check_unit_id('1'), 1)
         self.assertEqual(check_unit_id('255'), 255)
         self.assertEqual(check_unit_id('0x10'), 16)
-        
+
         with self.assertRaises(argparse.ArgumentTypeError):
             check_unit_id('0')
 
@@ -77,6 +77,88 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         with self.assertRaises(argparse.ArgumentTypeError):
             check_unit_id('abc')
 
+    def test_check_port_number(self):
+        self.assertEqual(check_port_number('1'), 1)
+        self.assertEqual(check_port_number('65535'), 65535)
+        self.assertEqual(check_port_number('0x100'), 256)
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_port_number('0')
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_port_number('65536')
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_port_number('0x10000')
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_port_number('abc')
+
+    def test_check_modbus_address(self):
+        self.assertEqual(check_modbus_address('0'), 0)
+        self.assertEqual(check_modbus_address('65535'), 65535)
+        self.assertEqual(check_modbus_address('0x100'), 256)
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_modbus_address('-1')
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_modbus_address('65536')
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_modbus_address('0x10000')
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_modbus_address('abc')
+
+    def test_check_number_of_values(self):
+        self.assertEqual(check_number_of_values('1'), 1)
+        self.assertEqual(check_number_of_values('125'), 125)
+        self.assertEqual(check_number_of_values('0x7D'), 125)
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_number_of_values('0')
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_number_of_values('126')
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_number_of_values('0x7E') # Test '0x7E' (126 in hex)
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_number_of_values('abc')
+
+    def test_check_timeout(self):
+        self.assertEqual(check_timeout('1'), 1)
+        self.assertEqual(check_timeout('119'), 119)
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_timeout('0')
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_timeout('120')
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_timeout('abc')
+
+    def test_check_ipv4_or_hostname(self):
+        # Test valid IPv4 addresses
+        self.assertEqual(check_ipv4_or_hostname('127.0.0.1'), '127.0.0.1')
+        self.assertEqual(check_ipv4_or_hostname('255.255.255.255'), '255.255.255.255')
+
+        # Test valid hostnames
+        self.assertEqual(check_ipv4_or_hostname('localhost'), 'localhost')
+        self.assertEqual(check_ipv4_or_hostname('test-server'), 'test-server')
+        
+        # Test invalid IPv4 addresses
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_ipv4_or_hostname('300.300.300.300')
+            check_ipv4_or_hostname('256.255.255.255')
+
+        # Test invalid hostnames
+        with self.assertRaises(argparse.ArgumentTypeError):
+            check_ipv4_or_hostname('localhost$')
+            check_ipv4_or_hostname('-test-server')
 
 if __name__ == '__main__':
     unittest.main()

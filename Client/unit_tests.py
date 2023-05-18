@@ -1,5 +1,7 @@
 import unittest
 from pymbtget import *
+from unittest.mock import patch
+from io import StringIO
 
 MODBUS_PORT = 10502
 
@@ -159,6 +161,29 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         with self.assertRaises(argparse.ArgumentTypeError):
             check_ipv4_or_hostname('localhost$')
             check_ipv4_or_hostname('-test-server')
+
+    # This decorator is used to replace the standard output (sys.stdout) with a StringIO object for the duration of the test
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_print_register_values(self, mock_stdout):
+        result = [12345, 23456, 34567]
+        modbus_address = 100
+        number_of_values = 3
+        script_mode = False
+        print_as_hex = False
+        print_float = False
+        two_comp = False
+
+        print_register_values(result, modbus_address, number_of_values, script_mode, print_as_hex, print_float, two_comp)
+
+        # expected_output is a string containing the expected standard output of the function call
+        expected_output = """Values:
+  1 (ad 00100): 12345
+  2 (ad 00101): 23456
+  3 (ad 00102): 34567
+"""
+        # Checks that the actual standard output of the function call is equal to the expected output
+        self.assertEqual(mock_stdout.getvalue(), expected_output)
+
 
 if __name__ == '__main__':
     unittest.main()

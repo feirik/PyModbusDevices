@@ -1,9 +1,14 @@
 import unittest
+import time
 from pymbtget import *
 from unittest.mock import patch
 from io import StringIO
 
 MODBUS_PORT = 10502
+MODBUS_SERVER_PORT = 11502
+REG_TEST_VALUE = 1234
+COIL_TEST_VALUE = True
+TEST_ADDRESS = 100
 
 class ModbusTCPClientTestCase(unittest.TestCase):
     def setUp(self):
@@ -208,6 +213,102 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         # Check that the actual output matches the expected output
         self.assertEqual(mock_stdout.getvalue(), expected_output)
 
+    def test_modbus_client_write_holding_registers(self):
+        # Create a new client connected to a local Modbus server
+        client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
+
+        try:
+            client.connect()
+
+            write_value = REG_TEST_VALUE
+            client.write_register(TEST_ADDRESS, write_value)
+
+            # Make sure write is processed
+            time.sleep(1)
+            
+        finally:
+            # Close the connection
+            client.close()
+
+    def test_modbus_client_read_holding_registers(self):
+        client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
+
+        try:
+            client.connect()
+
+            # Reading one register starting at address 100
+            result = client.read_holding_registers(TEST_ADDRESS, 1)  # reading one register starting at address 100
+            assert result == [REG_TEST_VALUE], 'Unexpected read result'
+        finally:
+            client.close()
+
+    def test_modbus_client_write_coils(self):
+        client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
+
+        try:
+            client.connect()
+
+            # Write a boolean value to a coil
+            client.write_coil(TEST_ADDRESS, COIL_TEST_VALUE)
+
+            # Make sure write is processed
+            time.sleep(1)
+
+        finally:
+            client.close()
+
+    def test_modbus_client_read_coils(self):
+        client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
+
+        try:
+            client.connect()
+
+            result = client.read_coils(TEST_ADDRESS, 1)
+            
+            # Convert the 1 or 0 to boolean
+            coil_status = bool(result[0])
+
+            assert coil_status == COIL_TEST_VALUE, 'Unexpected read result'
+
+        finally:
+            # Close the connection
+            client.close()
+
+    def test_modbus_client_read_discrete_inputs_unsupported(self):
+        client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
+
+        try:
+            client.connect()
+
+            # Try to read discrete inputs which is not supported by server
+            client.read_discrete_inputs(TEST_ADDRESS, 1)
+
+            # If an exception is not raised by this point, fail the test
+            self.fail('Expected function code exception but none was raised')
+
+        except ValueError as e:
+            # Check the error message matches what we expect
+            expected_msg = f'Sent function code 2, received exception code 1: illegal function'
+            self.assertEqual(str(e), expected_msg, 'Unexpected exception message')
+
+        finally:
+            client.close()
+
+    def test_modbus_client_read_input_registers_unsupported(self):
+        client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
+
+        try:
+            client.connect()
+            client.read_input_registers(TEST_ADDRESS, 1)
+            self.fail('Expected function code exception but none was raised')
+
+        except ValueError as e:
+            # Check the error message matches what we expect
+            expected_msg = f'Sent function code 4, received exception code 1: illegal function'
+            self.assertEqual(str(e), expected_msg, 'Unexpected exception message')
+
+        finally:
+            client.close()
 
 
 

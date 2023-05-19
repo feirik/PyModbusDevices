@@ -33,6 +33,7 @@ MIN_SET_POINT = 225
 MAX_SET_POINT = 235
 SET_POINT_230V = 230
 
+DEFAULT_PORT = 11502
 REGISTER_SIZE = 65536
 RANDOM_INPUT_V_LOWER = 210
 RANDOM_INPUT_V_UPPER = 255
@@ -307,7 +308,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--host', type=str, default='127.0.0.1', help='Host IP address')
-    parser.add_argument('-p', '--port', type=int, default=11502, help='Port number')
+    parser.add_argument('-p', '--port', type=int, default=DEFAULT_PORT, help='Port number')
     parser.add_argument('-d', '--debug', action='store_true', help='Enable printing debug messages')
 
     args = parser.parse_args()

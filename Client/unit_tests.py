@@ -11,6 +11,34 @@ COIL_TEST_VALUE = True
 TEST_ADDRESS = 100
 
 class ModbusTCPClientTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Initialize Modbus server to test values
+        cls.client = ModbusTCPClient('localhost', MODBUS_SERVER_PORT)
+
+        try:
+            # Attempt to connect to server
+            cls.client.connect()
+        except Exception as e:
+            raise ConnectionError(f"Unable to connect to Modbus server at localhost:{MODBUS_SERVER_PORT}. Error: {str(e)}")
+
+        try:
+            # Init register
+            cls.client.write_register(TEST_ADDRESS, REG_TEST_VALUE)
+            cls.client.close()
+
+            # Attempt to connect again
+            cls.client.connect()
+        except Exception as e:
+            raise ConnectionError(f"Unable to connect to Modbus server at localhost:{MODBUS_SERVER_PORT}. Error: {str(e)}")
+
+        try:
+            # Init coil
+            cls.client.write_coil(TEST_ADDRESS, COIL_TEST_VALUE)
+            cls.client.close()
+        except Exception as e:
+            raise Exception(f"Failed to write coil to address {TEST_ADDRESS} on Modbus server at localhost:{MODBUS_SERVER_PORT}. Error: {str(e)}")
+
     def setUp(self):
         # Instantiate the ModbusTCPClient class
         self.client = ModbusTCPClient('localhost', MODBUS_PORT)
@@ -213,23 +241,6 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         # Check that the actual output matches the expected output
         self.assertEqual(mock_stdout.getvalue(), expected_output)
 
-    def test_modbus_client_write_holding_registers(self):
-        # Create a new client connected to a local Modbus server
-        client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
-
-        try:
-            client.connect()
-
-            write_value = REG_TEST_VALUE
-            client.write_register(TEST_ADDRESS, write_value)
-
-            # Make sure write is processed
-            time.sleep(1)
-            
-        finally:
-            # Close the connection
-            client.close()
-
     def test_modbus_client_read_holding_registers(self):
         client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
 
@@ -239,21 +250,6 @@ class ModbusTCPClientTestCase(unittest.TestCase):
             # Reading one register starting at address 100
             result = client.read_holding_registers(TEST_ADDRESS, 1)  # reading one register starting at address 100
             assert result == [REG_TEST_VALUE], 'Unexpected read result'
-        finally:
-            client.close()
-
-    def test_modbus_client_write_coils(self):
-        client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
-
-        try:
-            client.connect()
-
-            # Write a boolean value to a coil
-            client.write_coil(TEST_ADDRESS, COIL_TEST_VALUE)
-
-            # Make sure write is processed
-            time.sleep(1)
-
         finally:
             client.close()
 

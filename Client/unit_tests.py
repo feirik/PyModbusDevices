@@ -1,5 +1,7 @@
 import unittest
 import time
+import subprocess
+import re
 from pymbtget import *
 from unittest.mock import patch
 from io import StringIO
@@ -306,6 +308,55 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         finally:
             client.close()
 
+    def test_server_read_holding_registers_debug(self):
+        command = ["python3", "pymbtget.py", "127.0.0.1", "-r3", "-a", "100", "-n", "10", "-p", "11502", "-d"]
+        result = subprocess.run(command, text=True, capture_output=True)
+
+        '''
+        Pattern:
+        1. 'Tx' indicates a transmission, with hexadecimal values for the protocol details.
+        2. The values after 'Tx' indicate the Modbus request sent (reading multiple registers).
+        3. 'Rx' signifies a reception, similar to 'Tx' but with response data.
+        4. The hexadecimal values after 'Rx' are the register values returned.
+        5. 'Values:' shows the human-readable register numbers, addresses, and their corresponding values.
+        '''
+        expected_output = (
+            r"Tx\[\w+\]03\d+64\d+0A"
+            r"Rx\[\w+\]03\d+04D2\d+"
+            r"Values:1\(ad00100\):12342\(ad00101\):\d3\(ad00102\):\d4\(ad00103\):\d5"
+            r"\(ad00104\):\d6\(ad00105\):\d7\(ad00106\):\d8\(ad00107\):\d9\(ad00108\):\d10\(ad00109\):0"
+        )
+
+        # Remove white space
+        actual_output = re.sub(r'\s', '', result.stdout)
+
+        # Assert the actual output matches the expected output using regex
+        self.assertTrue(re.match(expected_output, actual_output))
+
+    def test_server_read_coils_debug(self):
+        command = ["python3", "pymbtget.py", "127.0.0.1", "-r1", "-a", "100", "-n", "10", "-p", "11502", "-d"]
+        result = subprocess.run(command, text=True, capture_output=True)
+
+        '''
+        Pattern:
+        1. 'Tx' indicates a transmission, with hexadecimal values for the protocol details.
+        2. The values after 'Tx' indicate the Modbus request sent (reading multiple coils).
+        3. 'Rx' signifies a reception, similar to 'Tx' but with response data.
+        4. The hexadecimal values after 'Rx' are the coil values returned.
+        5. 'Values:' shows the human-readable coil numbers, addresses, and their corresponding values.
+        '''
+        expected_output = (
+        r"Tx\[\w+\]01\d+64\d+0A"
+        r"Rx\[\w+\]0102\d+00"
+        r"Values:1\(ad00100\):\d2\(ad00101\):\d3\(ad00102\):\d4\(ad00103\):\d5"
+        r"\(ad00104\):\d6\(ad00105\):\d7\(ad00106\):\d8\(ad00107\):\d9\(ad00108\):\d10\(ad00109\):0"
+        )
+
+        # Remove white space
+        actual_output = re.sub(r'\s', '', result.stdout)
+
+        # Assert the actual output matches the expected output using regex
+        self.assertTrue(re.match(expected_output, actual_output))
 
 
 if __name__ == '__main__':

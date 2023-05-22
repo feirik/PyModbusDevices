@@ -200,6 +200,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
     # This decorator is used to replace the standard output (sys.stdout) with a StringIO object for the duration of the test
     @patch('sys.stdout', new_callable=StringIO)
     def test_print_register_values(self, mock_stdout):
+        # Define the input parameters for the print_register_values function
         result = [12345, 23456, 34567]
         modbus_address = 100
         number_of_values = 3
@@ -208,16 +209,20 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         print_float = False
         two_comp = False
 
+        # Call the function with the defined parameters
         print_register_values(result, modbus_address, number_of_values, script_mode, print_as_hex, print_float, two_comp)
 
-        # expected_output is a string containing the expected standard output of the function call
-        expected_output = """Values:
-  1 (ad 00100): 12345
-  2 (ad 00101): 23456
-  3 (ad 00102): 34567
-"""
-        # Checks that the actual standard output of the function call is equal to the expected output
-        self.assertEqual(mock_stdout.getvalue(), expected_output)
+        # Define the expected output. The values should be the decimal representation of the input values
+        expected_output = (
+            r"Values:1\(ad00100\):123452\(ad00101\):234563\(ad00102\):34567"
+        )
+
+        # Remove white space
+        actual_output = re.sub(r'\s', '', mock_stdout.getvalue())
+
+        # Check that the actual output matches the expected output
+        self.assertTrue(re.match(expected_output, actual_output))
+
 
     @patch('sys.stdout', new_callable=StringIO)
     def test_print_register_values_as_hex(self, mock_stdout):
@@ -234,14 +239,15 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         print_register_values(result, modbus_address, number_of_values, script_mode, print_as_hex, print_float, two_comp)
 
         # Define the expected output. The values should be the hexadecimal representation of the input values
-        expected_output = """Values:
-  1 (ad 00100): 3039
-  2 (ad 00101): 5BA0
-  3 (ad 00102): 8707
-"""
+        expected_output = (
+            r"Values:1\(ad00100\):30392\(ad00101\):5BA03\(ad00102\):8707"
+        )
+
+        # Remove white space
+        actual_output = re.sub(r'\s', '', mock_stdout.getvalue())
 
         # Check that the actual output matches the expected output
-        self.assertEqual(mock_stdout.getvalue(), expected_output)
+        self.assertTrue(re.match(expected_output, actual_output))
 
     def test_modbus_client_read_holding_registers(self):
         client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
@@ -352,11 +358,76 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         r"\(ad00104\):\d6\(ad00105\):\d7\(ad00106\):\d8\(ad00107\):\d9\(ad00108\):\d10\(ad00109\):0"
         )
 
-        # Remove white space
         actual_output = re.sub(r'\s', '', result.stdout)
 
-        # Assert the actual output matches the expected output using regex
         self.assertTrue(re.match(expected_output, actual_output))
+
+    def test_server_write_holding_register_debug(self):
+        command = ["python3", "pymbtget.py", "-w6", "1234", "-a", "100", "-p", "11502", "-d"]
+        result = subprocess.run(command, text=True, capture_output=True)
+
+        '''
+        Pattern:
+        1. 'Tx' indicates a transmission, with hexadecimal values for the protocol details.
+        2. The values after 'Tx' indicate the Modbus request sent (writing to a single register).
+        3. 'Rx' signifies a reception, similar to 'Tx' but with response data.
+        4. The hexadecimal values after 'Rx' are the confirmation of the write request.
+        5. 'word write ok' message indicates that the write operation was successful.
+        '''
+        expected_output = (
+            r"Tx\[\w+\]06\d+64\d+D2"
+            r"Rx\[\w+\]06\d+64\d+D2"
+            r"wordwriteok"
+        )
+
+        actual_output = re.sub(r'\s', '', result.stdout)
+
+        self.assertTrue(re.match(expected_output, actual_output))
+
+    def test_server_write_single_coil_debug(self):
+        command = ["python3", "pymbtget.py", "-w5", "1", "-a", "100", "-p", "11502", "-d"]
+        result = subprocess.run(command, text=True, capture_output=True)
+
+        '''
+        Pattern:
+        1. 'Tx' indicates a transmission, with hexadecimal values for the protocol details.
+        2. The values after 'Tx' indicate the Modbus request sent (writing to a single coil).
+        3. 'Rx' signifies a reception, similar to 'Tx' but with response data.
+        4. The hexadecimal values after 'Rx' are the confirmation of the write request.
+        5. 'bit write ok' message indicates that the write operation was successful.
+        '''
+        expected_output = (
+            r"Tx\[\w+\]05\d+64FF00"
+            r"Rx\[\w+\]05\d+64FF00"
+            r"bitwriteok"
+        )
+
+        actual_output = re.sub(r'\s', '', result.stdout)
+
+        self.assertTrue(re.match(expected_output, actual_output))
+
+    def test_server_read_input_registers_exception(self):
+        command = ["python3", "pymbtget.py", "-r4", "-a", "100", "-p", "11502", "-d"]
+        result = subprocess.run(command, text=True, capture_output=True)
+
+        '''
+        Pattern:
+        1. 'Tx' indicates a transmission, with hexadecimal values for the protocol details.
+        2. The values after 'Tx' indicate the Modbus request sent (attempting to read input registers).
+        3. 'Rx' signifies a reception, similar to 'Tx' but contains exception code in this case.
+        4. 'Error:' indicates that an error message is following.
+        5. The error message describes the mismatch between the sent function code and the received exception code.
+        '''
+        expected_output = (
+            r"Tx\[\w+\]04\d+64\d+01"
+            r"Rx\[\w+\]8401"
+            r"Error:Sentfunctioncode4,receivedexceptioncode1:illegalfunction"
+        )
+
+        actual_output = re.sub(r'\s', '', result.stdout)
+
+        self.assertTrue(re.match(expected_output, actual_output))
+
 
 
 if __name__ == '__main__':

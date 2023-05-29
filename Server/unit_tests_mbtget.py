@@ -11,7 +11,6 @@ class ModbusServerTestCase(unittest.TestCase):
         self.server_thread = threading.Thread(target=self.server.start)
         self.server_thread.start()
 
-
     def test_write_to_holding_register_2(self):
         # Select a holding register index within the allowed range
         register_index = 2
@@ -23,7 +22,7 @@ class ModbusServerTestCase(unittest.TestCase):
         port = self.server.socket.getsockname()[1]
 
         # Run the command
-        subprocess.run(["mbtget", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
         # Read the value from the holding register
         register_value = self.server.holding_registers[register_index]
@@ -33,20 +32,20 @@ class ModbusServerTestCase(unittest.TestCase):
         self.server.stop()
 
         # Run a command to stop listening loop
-        subprocess.run(["mbtget", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
     def test_write_to_holding_register_200(self):
         register_index = 200
         test_value = 12
 
         port = self.server.socket.getsockname()[1]
-        subprocess.run(["mbtget", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
         register_value = self.server.holding_registers[register_index]
         self.assertEqual(test_value, register_value)
 
         self.server.stop()
-        subprocess.run(["mbtget", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
     
 
     def test_write_large_value_to_holding_register(self):
@@ -54,13 +53,13 @@ class ModbusServerTestCase(unittest.TestCase):
         test_value = 4000
 
         port = self.server.socket.getsockname()[1]
-        subprocess.run(["mbtget", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
         register_value = self.server.holding_registers[register_index]
         self.assertEqual(test_value, register_value)
 
         self.server.stop()
-        subprocess.run(["mbtget", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
 
     def test_write_to_holding_register_65535(self):
@@ -68,13 +67,13 @@ class ModbusServerTestCase(unittest.TestCase):
         test_value = 12
 
         port = self.server.socket.getsockname()[1]
-        subprocess.run(["mbtget", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
         register_value = self.server.holding_registers[register_index]
         self.assertEqual(test_value, register_value)
 
         self.server.stop()
-        subprocess.run(["mbtget", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w6", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
 
     def test_disable_output_coil_0(self):
@@ -82,7 +81,7 @@ class ModbusServerTestCase(unittest.TestCase):
         test_value = 0
 
         port = self.server.socket.getsockname()[1]
-        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
         register_value = self.server.coils[register_index]
         self.assertEqual(test_value, register_value)
@@ -94,7 +93,7 @@ class ModbusServerTestCase(unittest.TestCase):
         self.assertEqual(0, self.server.holding_registers[1])
 
         self.server.stop()
-        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
 
     def test_write_1_to_coil_1(self):
@@ -102,13 +101,13 @@ class ModbusServerTestCase(unittest.TestCase):
         test_value = 1
 
         port = self.server.socket.getsockname()[1]
-        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
         register_value = self.server.coils[register_index]
         self.assertEqual(test_value, register_value)
 
         self.server.stop()
-        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
 
     def test_write_1_to_coil_200(self):
@@ -116,13 +115,13 @@ class ModbusServerTestCase(unittest.TestCase):
         test_value = 1
 
         port = self.server.socket.getsockname()[1]
-        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
         register_value = self.server.coils[register_index]
         self.assertEqual(test_value, register_value)
 
         self.server.stop()
-        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
 
     def test_write_1_to_coil_65535(self):
@@ -130,13 +129,13 @@ class ModbusServerTestCase(unittest.TestCase):
         test_value = 1
 
         port = self.server.socket.getsockname()[1]
-        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
         register_value = self.server.coils[register_index]
         self.assertEqual(test_value, register_value)
 
         self.server.stop()
-        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
 
     def test_enable_override_coil_1(self):
@@ -145,7 +144,7 @@ class ModbusServerTestCase(unittest.TestCase):
 
         # Enable override coil
         port = self.server.socket.getsockname()[1]
-        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
         register_value = self.server.coils[register_index]
         self.assertEqual(test_value, register_value)
@@ -155,13 +154,13 @@ class ModbusServerTestCase(unittest.TestCase):
         set_point_index = 2
         time.sleep(1)
 
-        subprocess.run(["mbtget", "-w6", str(override_value), "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w6", str(override_value), "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
 
         set_point_register_value = self.server.holding_registers[set_point_index]
         self.assertEqual(override_value, set_point_register_value)
 
         self.server.stop()
-        subprocess.run(["mbtget", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w5", str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
         
         
     def test_max_limit_set_point(self):
@@ -173,7 +172,7 @@ class ModbusServerTestCase(unittest.TestCase):
         override_value = 280
         set_point_index = 2
 
-        subprocess.run(["mbtget", "-w6", str(override_value), "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w6", str(override_value), "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
 
         time.sleep(1)
 
@@ -181,7 +180,7 @@ class ModbusServerTestCase(unittest.TestCase):
         self.assertEqual(MAX_SET_POINT, set_point_register_value)
 
         self.server.stop()
-        subprocess.run(["mbtget", "-w5", "0", "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w5", "0", "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
 
 
     def test_min_limit_set_point(self):
@@ -193,7 +192,7 @@ class ModbusServerTestCase(unittest.TestCase):
         override_value = 80
         set_point_index = 2
 
-        subprocess.run(["mbtget", "-w6", str(override_value), "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w6", str(override_value), "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
 
         time.sleep(1)
 
@@ -201,7 +200,7 @@ class ModbusServerTestCase(unittest.TestCase):
         self.assertEqual(MIN_SET_POINT, set_point_register_value)
 
         self.server.stop()
-        subprocess.run(["mbtget", "-w5", "0", "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", "../Client/pymbtget.py", "-w5", "0", "-a", str(set_point_index), "-p", str(port), "127.0.0.1"])
 
 
 if __name__ == '__main__':

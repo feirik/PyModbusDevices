@@ -6,8 +6,7 @@ from pymbtget import *
 from unittest.mock import patch
 from io import StringIO
 
-MODBUS_PORT = 10502
-MODBUS_SERVER_PORT = 11502
+MODBUS_TEST_PORT = 10502
 REG_TEST_VALUE = 1234
 COIL_TEST_VALUE = True
 TEST_ADDRESS = 100
@@ -16,13 +15,13 @@ class ModbusTCPClientTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Initialize Modbus server to test values
-        cls.client = ModbusTCPClient('localhost', MODBUS_SERVER_PORT)
+        cls.client = ModbusTCPClient('localhost', MODBUS_TEST_PORT)
 
         try:
             # Attempt to connect to server
             cls.client.connect()
         except Exception as e:
-            raise ConnectionError(f"Unable to connect to Modbus server at localhost:{MODBUS_SERVER_PORT}. Error: {str(e)}")
+            raise ConnectionError(f"Unable to connect to Modbus server at localhost:{MODBUS_TEST_PORT}. Error: {str(e)}")
 
         try:
             # Init register
@@ -32,25 +31,25 @@ class ModbusTCPClientTestCase(unittest.TestCase):
             # Attempt to connect again
             cls.client.connect()
         except Exception as e:
-            raise ConnectionError(f"Unable to connect to Modbus server at localhost:{MODBUS_SERVER_PORT}. Error: {str(e)}")
+            raise ConnectionError(f"Unable to connect to Modbus server at localhost:{MODBUS_TEST_PORT}. Error: {str(e)}")
 
         try:
             # Init coil
             cls.client.write_coil(TEST_ADDRESS, COIL_TEST_VALUE)
             cls.client.close()
         except Exception as e:
-            raise Exception(f"Failed to write coil to address {TEST_ADDRESS} on Modbus server at localhost:{MODBUS_SERVER_PORT}. Error: {str(e)}")
+            raise Exception(f"Failed to write coil to address {TEST_ADDRESS} on Modbus server at localhost:{MODBUS_TEST_PORT}. Error: {str(e)}")
 
     def setUp(self):
         # Instantiate the ModbusTCPClient class
-        self.client = ModbusTCPClient('localhost', MODBUS_PORT)
+        self.client = ModbusTCPClient('localhost', MODBUS_TEST_PORT)
 
     def test_initialization(self):
         # Test the server property is initialized correctly
         self.assertEqual(self.client.server, 'localhost')
 
         # Test the port property is initialized correctly
-        self.assertEqual(self.client.port, MODBUS_PORT)
+        self.assertEqual(self.client.port, MODBUS_TEST_PORT)
 
         # Test the default values of timeout and print_dump_data
         self.assertEqual(self.client.timeout, 5)
@@ -250,7 +249,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         self.assertTrue(re.match(expected_output, actual_output))
 
     def test_modbus_client_read_holding_registers(self):
-        client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
+        client = ModbusTCPClient('localhost', port=MODBUS_TEST_PORT)
 
         try:
             client.connect()
@@ -262,7 +261,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
             client.close()
 
     def test_modbus_client_read_coils(self):
-        client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
+        client = ModbusTCPClient('localhost', port=MODBUS_TEST_PORT)
 
         try:
             client.connect()
@@ -279,7 +278,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
             client.close()
 
     def test_modbus_client_read_discrete_inputs_unsupported(self):
-        client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
+        client = ModbusTCPClient('localhost', port=MODBUS_TEST_PORT)
 
         try:
             client.connect()
@@ -299,7 +298,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
             client.close()
 
     def test_modbus_client_read_input_registers_unsupported(self):
-        client = ModbusTCPClient('localhost', port=MODBUS_SERVER_PORT)
+        client = ModbusTCPClient('localhost', port=MODBUS_TEST_PORT)
 
         try:
             client.connect()

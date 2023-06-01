@@ -31,7 +31,8 @@ The script supports the following command line arguments:
 You can run the script with your desired command line arguments. Here's an example command:
 
 ```shell
-python3 pymbtget.py 192.168.1.100 -p 502 -r3 -a 0 -n 5```
+python3 pymbtget.py 192.168.1.100 -p 502 -r3 -a 0 -n 5
+```
 
 In this command:
 

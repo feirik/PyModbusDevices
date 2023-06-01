@@ -40,9 +40,11 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         except Exception as e:
             raise Exception(f"Failed to write coil to address {TEST_ADDRESS} on Modbus server at localhost:{MODBUS_TEST_PORT}. Error: {str(e)}")
 
+
     def setUp(self):
         # Instantiate the ModbusTCPClient class
         self.client = ModbusTCPClient('localhost', MODBUS_TEST_PORT)
+
 
     def test_initialization(self):
         # Test the server property is initialized correctly
@@ -55,13 +57,16 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         self.assertEqual(self.client.timeout, 5)
         self.assertEqual(self.client.print_debug, False)
 
+
     def test_transaction_id_initialization(self):
         # Test the transaction_id property is initialized to 0
         self.assertEqual(self.client.transaction_id, 0)
 
+
     def test_socket_initialization(self):
         # Test the socket property is initialized to None
         self.assertIsNone(self.client.sock)
+
 
     def test_check_bit_value(self):
         # Test that '0' returns 0
@@ -73,6 +78,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         # Test that '2' raises an ArgumentTypeError
         with self.assertRaises(argparse.ArgumentTypeError):
             check_bit_value('2')
+
 
     def test_check_word_value(self):
         # Test that '0' returns 0
@@ -96,6 +102,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         with self.assertRaises(argparse.ArgumentTypeError):
             check_word_value('abc')
 
+
     def test_check_unit_id(self):
         self.assertEqual(check_unit_id('1'), 1)
         self.assertEqual(check_unit_id('255'), 255)
@@ -112,6 +119,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
 
         with self.assertRaises(argparse.ArgumentTypeError):
             check_unit_id('abc')
+
 
     def test_check_port_number(self):
         self.assertEqual(check_port_number('1'), 1)
@@ -130,6 +138,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         with self.assertRaises(argparse.ArgumentTypeError):
             check_port_number('abc')
 
+
     def test_check_modbus_address(self):
         self.assertEqual(check_modbus_address('0'), 0)
         self.assertEqual(check_modbus_address('65535'), 65535)
@@ -146,6 +155,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
 
         with self.assertRaises(argparse.ArgumentTypeError):
             check_modbus_address('abc')
+
 
     def test_check_number_of_values(self):
         self.assertEqual(check_number_of_values('1'), 1)
@@ -164,6 +174,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         with self.assertRaises(argparse.ArgumentTypeError):
             check_number_of_values('abc')
 
+
     def test_check_timeout(self):
         self.assertEqual(check_timeout('1'), 1)
         self.assertEqual(check_timeout('119'), 119)
@@ -176,6 +187,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
 
         with self.assertRaises(argparse.ArgumentTypeError):
             check_timeout('abc')
+
 
     def test_check_ipv4_or_hostname(self):
         # Test valid IPv4 addresses
@@ -195,6 +207,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         with self.assertRaises(argparse.ArgumentTypeError):
             check_ipv4_or_hostname('localhost$')
             check_ipv4_or_hostname('-test-server')
+
 
     # This decorator is used to replace the standard output (sys.stdout) with a StringIO object for the duration of the test
     @patch('sys.stdout', new_callable=StringIO)
@@ -248,6 +261,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         # Check that the actual output matches the expected output
         self.assertTrue(re.match(expected_output, actual_output))
 
+
     def test_modbus_client_read_holding_registers(self):
         client = ModbusTCPClient('localhost', port=MODBUS_TEST_PORT)
 
@@ -259,6 +273,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
             assert result == [REG_TEST_VALUE], 'Unexpected read result'
         finally:
             client.close()
+
 
     def test_modbus_client_read_coils(self):
         client = ModbusTCPClient('localhost', port=MODBUS_TEST_PORT)
@@ -276,6 +291,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         finally:
             # Close the connection
             client.close()
+
 
     def test_modbus_client_read_discrete_inputs_unsupported(self):
         client = ModbusTCPClient('localhost', port=MODBUS_TEST_PORT)
@@ -297,6 +313,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         finally:
             client.close()
 
+
     def test_modbus_client_read_input_registers_unsupported(self):
         client = ModbusTCPClient('localhost', port=MODBUS_TEST_PORT)
 
@@ -312,6 +329,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
 
         finally:
             client.close()
+
 
     def test_server_read_holding_registers_debug(self):
         command = ["python3", "pymbtget.py", "127.0.0.1", "-r3", "-a", "100", "-n", "10", "-p", "11502", "-d"]
@@ -338,6 +356,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         # Assert the actual output matches the expected output using regex
         self.assertTrue(re.match(expected_output, actual_output))
 
+
     def test_server_read_coils_debug(self):
         command = ["python3", "pymbtget.py", "127.0.0.1", "-r1", "-a", "100", "-n", "10", "-p", "11502", "-d"]
         result = subprocess.run(command, text=True, capture_output=True)
@@ -361,6 +380,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
 
         self.assertTrue(re.match(expected_output, actual_output))
 
+
     def test_server_write_holding_register_debug(self):
         command = ["python3", "pymbtget.py", "-w6", "1234", "-a", "100", "-p", "11502", "-d"]
         result = subprocess.run(command, text=True, capture_output=True)
@@ -382,6 +402,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         actual_output = re.sub(r'\s', '', result.stdout)
 
         self.assertTrue(re.match(expected_output, actual_output))
+
 
     def test_server_write_single_coil_debug(self):
         command = ["python3", "pymbtget.py", "-w5", "1", "-a", "100", "-p", "11502", "-d"]
@@ -405,6 +426,7 @@ class ModbusTCPClientTestCase(unittest.TestCase):
 
         self.assertTrue(re.match(expected_output, actual_output))
 
+
     def test_server_read_input_registers_exception(self):
         command = ["python3", "pymbtget.py", "-r4", "-a", "100", "-p", "11502", "-d"]
         result = subprocess.run(command, text=True, capture_output=True)
@@ -426,7 +448,6 @@ class ModbusTCPClientTestCase(unittest.TestCase):
         actual_output = re.sub(r'\s', '', result.stdout)
 
         self.assertTrue(re.match(expected_output, actual_output))
-
 
 
 if __name__ == '__main__':

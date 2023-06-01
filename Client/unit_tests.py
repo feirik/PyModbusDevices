@@ -6,7 +6,7 @@ from pymbtget import *
 from unittest.mock import patch
 from io import StringIO
 
-MODBUS_TEST_PORT = 10502
+MODBUS_TEST_PORT = 11502
 REG_TEST_VALUE = 1234
 COIL_TEST_VALUE = True
 TEST_ADDRESS = 100

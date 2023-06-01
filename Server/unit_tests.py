@@ -8,6 +8,8 @@ MIN_SET_POINT = 225
 MAX_SET_POINT = 235
 SET_POINT_230V = 230
 
+CLIENT_PATH="../Client/pymbtget.py"
+
 class ModbusServerTestCase(unittest.TestCase):
     def setUp(self):
         # Instantiate the ModbusServer class
@@ -17,7 +19,7 @@ class ModbusServerTestCase(unittest.TestCase):
 
 
     def run_command(self, command, test_value, register_index, port):
-        subprocess.run(["python3", "../Client/pymbtget.py", command, str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
+        subprocess.run(["python3", CLIENT_PATH, command, str(test_value), "-a", str(register_index), "-p", str(port), "127.0.0.1"])
 
 
     def test_holding_registers_initialization(self):

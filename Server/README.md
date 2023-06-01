@@ -33,18 +33,13 @@ To start the simulator, run the program with the desired command line arguments.
 
 The program will print out the IP address, port, and debug information settings to the console. The simulator will then listen for incoming Modbus TCP requests on the specified IP address and port.
 
-# Unit tests
+# Unit Tests
 
-To run the basic unit tests for this project, simply execute the following command in the project directory:
+To execute the unit tests for this project, you need to run the `unit_tests.py` file. This script contains a comprehensive suite of tests, including basic functionality tests as well as tests for the Modbus server's read and write capabilities.
 
-``python3 -m unittest unit_tests_init.py``
+You can run these tests by navigating to the project directory and executing the following command:
 
-This will run all of the tests defined in the unit_tests_init.py file and display the results in the console. If any tests fail, you will see an error message with details about the failure. If all tests pass, you will see a message indicating that all tests were successful.
+```shell
+python3 -m unittest unit_tests.py```
 
-To run the remaining unit tests for this project to test modbus write functionality, you need to install the mbtget utility. This utility is used to send Modbus messages to the Modbus server and verify that the server is responding correctly.
-
-Once you have installed mbtget, you can run the tests by executing the following command in the project directory:
-
-``python3 -m unittest unit_tests_mbtget.py``
-
-This will run all of the tests defined in the unit_tests_mbtget.py file, which include tests that verify that the Modbus server is properly handling read and write requests. If any tests fail, you will see an error message with details about the failure. If all tests pass, you will see a message indicating that all tests were successful.
+Upon execution, this command will run all the tests defined in the unit_tests.py file and display the results in the console. If any test fails, you'll see an error message detailing the nature of the failure. Conversely, if all tests pass, you'll see a message indicating successful completion of all tests. The tests are using the client in `../Client/pymbtget.py` for interacting with the server.

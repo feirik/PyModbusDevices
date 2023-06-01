@@ -49,7 +49,8 @@ To run the unit tests, navigate to the client's folder and execute the following
 
 ```shell
 python3 ../Server/modbus_voltage_regulator.py&
-python3 -m unittest unit_tests.py```
+python3 -m unittest unit_tests.py
+```
 
 - The first command starts the Modbus server script `modbus_voltage_regulator.py` in the background. This script simulates a Modbus server for the purpose of testing.
 - The second command runs the suite of unit tests defined in `unit_tests.py` using Python's built-in `unittest` module.

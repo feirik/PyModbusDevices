@@ -40,6 +40,7 @@ To execute the unit tests for this project, you need to run the `unit_tests.py` 
 You can run these tests by navigating to the project directory and executing the following command:
 
 ```shell
-python3 -m unittest unit_tests.py```
+python3 -m unittest unit_tests.py
+```
 
 Upon execution, this command will run all the tests defined in the unit_tests.py file and display the results in the console. If any test fails, you'll see an error message detailing the nature of the failure. Conversely, if all tests pass, you'll see a message indicating successful completion of all tests. The tests are using the client in `../Client/pymbtget.py` for interacting with the server.

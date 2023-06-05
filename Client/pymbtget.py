@@ -8,7 +8,7 @@ import sys
 import re
 
 # Constants
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 
 # Modbus/TCP Parameters
 MODBUS_PORT = 502
@@ -65,16 +65,6 @@ HEX_BASE = 16
 MAX_REGISTERS_PER_READ = 125
 MAX_TIMEOUT = 120
 SIGN_BIT_POSITION = 15
-
-# Function codes dictionary
-function_codes = {
-    READ_COILS: 'read coils',
-    READ_DISCRETE_INPUTS: 'read discrete inputs',
-    READ_HOLDING_REGISTERS: 'read holding registers',
-    READ_INPUT_REGISTERS: 'read input registers',
-    WRITE_SINGLE_COIL: 'write single coil',
-    WRITE_SINGLE_REGISTER: 'write single register'
-}
 
 # Exception codes dictionary
 exception_codes = {

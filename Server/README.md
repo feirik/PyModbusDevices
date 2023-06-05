@@ -35,12 +35,10 @@ The program will print out the IP address, port, and debug information settings 
 
 # Unit Tests
 
-To execute the unit tests for this project, you need to run the `unit_tests.py` file. This script contains a comprehensive suite of tests, including basic functionality tests as well as tests for the Modbus server's read and write capabilities.
-
-You can run these tests by navigating to the project directory and executing the following command:
+You can run unit tests by navigating to the project directory and executing the following command:
 
 ```shell
 python3 -m unittest unit_tests.py
 ```
 
-Upon execution, this command will run all the tests defined in the unit_tests.py file and display the results in the console. If any test fails, you'll see an error message detailing the nature of the failure. Conversely, if all tests pass, you'll see a message indicating successful completion of all tests. The tests are using the client in `../Client/pymbtget.py` for interacting with the server.
+Unit tests for various read and write operations are included. The tests are using the client in `../Client/pymbtget.py` for interacting with the server.

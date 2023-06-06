@@ -55,3 +55,13 @@ python3 -m unittest unit_tests.py
 
 - The first command starts the Modbus server script `modbus_voltage_regulator.py` in the background. This script simulates a Modbus server for the purpose of testing.
 - The second command runs the suite of unit tests defined in `unit_tests.py` using Python's built-in `unittest` module.
+
+## API
+
+Test the API by running
+
+```shell
+python3 -m Client.api_pymbtget
+```
+
+From the PyModbusDevices folder

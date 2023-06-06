@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from pymbtget import ModbusTCPClient
+from .pymbtget import ModbusTCPClient
 
 """
 The ModbusTCPClientAPI class initializes a ModbusTCPClient object, connects to the server,

@@ -1,6 +1,6 @@
 This project contains a basic Python implementation of these parts:
 * Modbus TCP Client
-* Modbus TCP Server simulating a voltage regulator. 
+* Modbus TCP Server simulating a voltage regulator
 
 The Client implementation serves as a Python implementation to the Perl script mbtget, enabling users to connect to a Modbus server and perform various read and write operations. The Server component simulates a Modbus voltage regulator for testing and understanding simple Modbus commands.
 

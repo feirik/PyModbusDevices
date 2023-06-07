@@ -58,8 +58,9 @@ python3 -m unittest unit_tests.py
 
 ## Testing the API
 
-Test the API by running the command below from the PyModbusDevices folder.
+Test the API by running the commands below from the PyModbusDevices folder.
 
 ```shell
+python3 Server/modbus_voltage_regulator.py&
 python3 -m Client.api_pymbtget
 ```

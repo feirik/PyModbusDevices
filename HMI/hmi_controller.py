@@ -29,8 +29,6 @@ class HMIController:
 
             result = client.read_coils(coil_address, NUMBER_OF_COILS)
 
-            print("we're here read")
-
             client.close()
 
             # Update GUI with result
@@ -45,8 +43,6 @@ class HMIController:
             coil_value = bool(int(self.view.coil_value_entry.get()))
 
             client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
-
-            print("we're here")
 
             # Use Modbus client to write coil
             result = client.write_coil(coil_address, coil_value)

@@ -82,45 +82,59 @@ def main():
     port = 11502
     timeout = 5
     unit_id = 1
-    modbus_address = 100  # Replace with your desired Modbus address
-    number_of_values = 10  # Replace with your desired number of values to read
-    bit_value = True  # Replace with your desired bit value to write
-    word_value = 1235  # Replace with your desired word value to write
+    modbus_address = 100
+    number_of_values = 10
+    bit_value_before = False
+    word_value_before = 1234 
+    bit_value_after = True
+    word_value_after = 2468
+
+    # Write Coil initial value
+    modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
+    result = modbus_client.write_coil(modbus_address, bit_value_before)
+    print(f"Intial write - Write Coil Result: {result}")
+    modbus_client.close()
+
+    # Write Register initial value
+    modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
+    result = modbus_client.write_register(modbus_address, word_value_before)
+    print(f"Intial write - Write Register Result: {result}")
+    modbus_client.close()
 
     # Read Coils
     modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
     result = modbus_client.read_coils(modbus_address, number_of_values)
-    print(f"Read Coils Result: {result}")
+    print(f"Intial read - Read Coils Result: {result}")
     modbus_client.close()
 
     # Read Holding Registers
     modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
     result = modbus_client.read_holding_registers(modbus_address, number_of_values)
-    print(f"Read Holding Registers Result: {result}")
+    print(f"Intial read - Read Holding Registers Result: {result}")
     modbus_client.close()
 
     # Write Coil
     modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
-    result = modbus_client.write_coil(modbus_address, bit_value)
-    print(f"Write Coil Result: {result}")
+    result = modbus_client.write_coil(modbus_address, bit_value_after)
+    print(f"Updated write - Write Coil Result: {result}")
     modbus_client.close()
 
     # Write Register
     modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
-    result = modbus_client.write_register(modbus_address, word_value)
-    print(f"Write Register Result: {result}")
+    result = modbus_client.write_register(modbus_address, word_value_after)
+    print(f"Updated write - Write Register Result: {result}")
     modbus_client.close()
 
     # Read Coils
     modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
     result = modbus_client.read_coils(modbus_address, number_of_values)
-    print(f"Read Coils Result: {result}")
+    print(f"Updated read - Read Coils Result: {result}")
     modbus_client.close()
 
     # Read Holding Registers
     modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
     result = modbus_client.read_holding_registers(modbus_address, number_of_values)
-    print(f"Read Holding Registers Result: {result}")
+    print(f"Updated read - Read Holding Registers Result: {result}")
     modbus_client.close()
 
 

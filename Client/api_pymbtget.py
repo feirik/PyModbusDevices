@@ -32,7 +32,7 @@ class ModbusTCPClientAPI:
     """
     def read_coils(self, modbus_address, number_of_values):
         result = self.client.read_coils(modbus_address, number_of_values, unit=self.unit_id)
-        return result
+        return result[:number_of_values]
 
     """
     Reads the content of specific holding registers on the Modbus device.

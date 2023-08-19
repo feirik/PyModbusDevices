@@ -13,6 +13,7 @@ class HMIView(tk.Frame):
         
         # Entry field for coil value to write
         self.coil_value_entry = tk.Entry(self)
+        self.coil_value_entry.insert(0, "0")  # Set default value to 0
         self.coil_value_entry.grid(row=1, column=0, sticky="W")
 
         # Label for read coil result
@@ -45,4 +46,13 @@ class HMIView(tk.Frame):
         
         # Entry field for coil address to read/write
         self.coil_address_entry = tk.Entry(self)
+        self.coil_address_entry.insert(100, "100")  # Set default value to 100
         self.coil_address_entry.grid(row=7, column=0, sticky="W")
+
+        # Label for read holding register result
+        self.read_holding_register_label = tk.Label(self, text="Current voltage:")
+        self.read_holding_register_label.grid(row=8, column=0, sticky="W")
+
+        # Display labels for holding register read results
+        self.read_holding_result_label = tk.Label(self, text="")
+        self.read_holding_result_label.grid(row=9, column=0, sticky="W")

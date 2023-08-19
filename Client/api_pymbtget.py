@@ -22,6 +22,17 @@ class ModbusTCPClientAPI:
         self.client.connect()
 
     """
+    Reads the state of a specific coil on the Modbus device.
+
+    modbus_address (int): The address of the coil to read.
+
+    returns (bool): The state of the coil read (True for ON, False for OFF).
+    """
+    def read_coil(self, modbus_address):
+        result = self.client.read_coils(modbus_address, 1, unit=self.unit_id)
+        return result[0]
+
+    """
     Reads the state of specific coils on the Modbus device.
 
     modbus_address (int): The address of the first coil to read.
@@ -30,9 +41,20 @@ class ModbusTCPClientAPI:
 
     returns (list of bool): An array of boolean values representing the state of each coil read.
     """
-    def read_coils(self, modbus_address, number_of_values):
+    def read_multiple_coils(self, modbus_address, number_of_values):
         result = self.client.read_coils(modbus_address, number_of_values, unit=self.unit_id)
         return result[:number_of_values]
+
+    """
+    Reads the content of a specific holding register on the Modbus device.
+
+    modbus_address (int): The address of the holding register to read.
+
+    returns (int): The value of the holding register read.
+    """
+    def read_holding_register(self, modbus_address):
+        result = self.client.read_holding_registers(modbus_address, 1, unit=self.unit_id)
+        return result[0]
 
     """
     Reads the content of specific holding registers on the Modbus device.
@@ -43,7 +65,7 @@ class ModbusTCPClientAPI:
 
     returns (list of int): An array of integer values representing the content of each holding register read.
     """
-    def read_holding_registers(self, modbus_address, number_of_values):
+    def read_multiple_holding_registers(self, modbus_address, number_of_values):
         result = self.client.read_holding_registers(modbus_address, number_of_values, unit=self.unit_id)
         return result
 
@@ -82,6 +104,7 @@ def main():
     port = 11502
     timeout = 5
     unit_id = 1
+    modbus_single_reg_address = 0
     modbus_address = 100
     number_of_values = 10
     bit_value_before = False
@@ -103,13 +126,13 @@ def main():
 
     # Read Coils
     modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
-    result = modbus_client.read_coils(modbus_address, number_of_values)
+    result = modbus_client.read_multiple_coils(modbus_address, number_of_values)
     print(f"Intial read - Read Coils Result: {result}")
     modbus_client.close()
 
     # Read Holding Registers
     modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
-    result = modbus_client.read_holding_registers(modbus_address, number_of_values)
+    result = modbus_client.read_multiple_holding_registers(modbus_address, number_of_values)
     print(f"Intial read - Read Holding Registers Result: {result}")
     modbus_client.close()
 
@@ -127,16 +150,28 @@ def main():
 
     # Read Coils
     modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
-    result = modbus_client.read_coils(modbus_address, number_of_values)
+    result = modbus_client.read_multiple_coils(modbus_address, number_of_values)
     print(f"Updated read - Read Coils Result: {result}")
     modbus_client.close()
 
     # Read Holding Registers
     modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
-    result = modbus_client.read_holding_registers(modbus_address, number_of_values)
+    result = modbus_client.read_multiple_holding_registers(modbus_address, number_of_values)
     print(f"Updated read - Read Holding Registers Result: {result}")
     modbus_client.close()
 
+    # Read Holding Registers
+    modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
+    result = modbus_client.read_holding_register(modbus_single_reg_address)
+    print(f"Read changing variable - Read Holding Register Result: {result}")
+    modbus_client.close()
+
+    # Read single coil
+    modbus_client = ModbusTCPClientAPI(ip_address, port, timeout, unit_id)
+    result = modbus_client.read_coil(modbus_address)
+    print(f"Read single value - Read Coil Result: {result}")
+    modbus_client.close()
 
 if __name__ == "__main__":
     main()
+    

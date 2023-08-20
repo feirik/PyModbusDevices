@@ -1,5 +1,8 @@
 import tkinter as tk
 
+# Importing Matplotlib's backend to embed plots in a Tkinter application.
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 class HMIView(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
@@ -56,3 +59,8 @@ class HMIView(tk.Frame):
         # Display labels for holding register read results
         self.read_holding_result_label = tk.Label(self, text="")
         self.read_holding_result_label.grid(row=9, column=0, sticky="W")
+
+        # Matplotlib Canvas
+        self.canvas_frame = tk.Frame(self.master)
+        self.canvas_frame.grid(row=10, column=0, columnspan=2)
+        self.plot_canvas = None  # This will be set by the controller when the plot is updated

@@ -37,6 +37,12 @@ class HMIController:
     def setup_graph_view(self):
         """Initialize the Matplotlib figure and axis."""
         self.fig, self.ax = plt.subplots(figsize=(5, 4))
+
+        # Set the figure background color
+        self.fig.patch.set_facecolor('#F3F3F3')
+
+        # Set the axis background color
+        self.ax.set_facecolor('#F3F3F3')
         
         # Set consistent intervals for the X and Y axes
         self.ax.set_xlim(0, 60)  # Fixed at 60 seconds
@@ -44,11 +50,20 @@ class HMIController:
         
         # Assuming the normal range is 220 to 240
         self.ax.axhspan(220, 240, color='green', alpha=0.1, label='Normal Range')
+
+        # Set x-ticks to represent elapsed time
+        self.ax.set_xticks([0, 15, 30, 45, 60])
+        self.ax.set_xticklabels(['-60','-45', '-30', '-15', '60s'])
+        xticks = self.ax.get_xticklabels()
+        xticks[-1].set_color('darkgreen')
+        xticks[-1].set_weight('bold')
         
         # Label the axes
-        self.ax.set_xlabel("Seconds")
-        self.ax.set_ylabel("Voltage")
+        self.ax.set_ylabel("0\nVoltage\nIn (V)", rotation=0, labelpad=20, va='center', 
+                       bbox=dict(facecolor='none', edgecolor='blue', boxstyle='square', linewidth=2))
         
+        self.ax.set_yticklabels([])
+
         # Use faint grid lines
         self.ax.grid(alpha=0.2)
 
@@ -56,6 +71,8 @@ class HMIController:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.view)
         self.canvas_widget = self.canvas.get_tk_widget()
         self.canvas_widget.grid(row=10, column=0, columnspan=2, pady=20)
+
+        self.fig.tight_layout()
 
     def update_graph(self, value):
         """Update the Matplotlib plot with the new reading."""
@@ -77,12 +94,24 @@ class HMIController:
         
         # Plot the data
         self.ax.plot(self.data, "-o", color=color, markersize=1)
+
+        # Label the axes
+        y_label_text = f"{round(value, 1)}\nVoltage\nIn (V)"
+        self.ax.set_ylabel(y_label_text, rotation=0, labelpad=20, va='center', 
+                       bbox=dict(facecolor='none', edgecolor='blue', boxstyle='square', linewidth=2))
+
+        self.ax.set_yticklabels([])
+
+        # Set x-ticks to represent elapsed time
+        self.ax.set_xticks([0, 15, 30, 45, 60])
+        self.ax.set_xticklabels(['-60','-45', '-30', '-15', '60s'])
+        xticks = self.ax.get_xticklabels()
+        xticks[-1].set_color('darkgreen')
+        xticks[-1].set_weight('bold')
         
         # Set the axes labels and grid
         self.ax.set_xlim(0, 60)  # Fixed at 60 seconds
         self.ax.set_ylim(200, 260)  # Voltage range from 200 to 260
-        self.ax.set_xlabel("Seconds")
-        self.ax.set_ylabel("Voltage")
         self.ax.grid(alpha=0.2)
         self.fig.tight_layout()
         self.canvas.draw()

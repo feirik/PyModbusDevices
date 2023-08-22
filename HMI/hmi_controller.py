@@ -2,6 +2,7 @@ import tkinter as tk
 import os
 import sys
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Add the parent directory of this script to the system path to allow importing modules from there
@@ -36,7 +37,7 @@ class HMIController:
 
     def setup_graph_view(self):
         """Initialize the Matplotlib figure and axis."""
-        self.fig, self.ax = plt.subplots(figsize=(5, 4))
+        self.fig, self.ax = plt.subplots(figsize=(5, 3.2))
 
         # Set the figure background color
         self.fig.patch.set_facecolor('#F3F3F3')
@@ -63,6 +64,13 @@ class HMIController:
                        bbox=dict(facecolor='none', edgecolor='blue', boxstyle='square', linewidth=2))
         
         self.ax.set_yticklabels([])
+
+        # x, y, width, height
+        rect = [0.9439, 0.121, 0.015, 0.832]  # Adjust these values as needed
+        rectangle = Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
+                    facecolor='#D5D5D5', edgecolor='black', linewidth=1, clip_on=False)
+
+        self.fig.patches.extend([rectangle])
 
         # Use faint grid lines
         self.ax.grid(alpha=0.2)
@@ -108,6 +116,13 @@ class HMIController:
         xticks = self.ax.get_xticklabels()
         xticks[-1].set_color('darkgreen')
         xticks[-1].set_weight('bold')
+
+        # x, y, width, height
+        rect = [0.9439, 0.121, 0.015, 0.832]  # Adjust these values as needed
+        rectangle = Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
+                    facecolor='#D5D5D5', edgecolor='black', linewidth=1, clip_on=False)
+        
+        self.fig.patches.extend([rectangle])
         
         # Set the axes labels and grid
         self.ax.set_xlim(0, 60)  # Fixed at 60 seconds

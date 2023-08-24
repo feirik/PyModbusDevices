@@ -57,7 +57,7 @@ class HMIController:
         xticks[-1].set_color('darkgreen')
         xticks[-1].set_weight('bold')
         
-        # Label the axes
+        # Input voltage label
         self.ax.set_ylabel("0\nVoltage\nIn (V)", rotation=0, labelpad=20, va='center', 
                        bbox=dict(facecolor='none', edgecolor='#0000D7', boxstyle='square', linewidth=2))
         
@@ -103,9 +103,15 @@ class HMIController:
         # Embed the Matplotlib figure into the Tkinter window
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.view)
         self.canvas_widget = self.canvas.get_tk_widget()
-        self.canvas_widget.grid(row=10, column=0, columnspan=2, pady=20)
+        self.canvas_widget.grid(row=0, column=0, columnspan=2, pady=20, padx=20)
+
+        # Add an outline box around the entire figure
+        outline_box = Rectangle((0, 0), 1, 1, transform=self.fig.transFigure, 
+                                facecolor='none', edgecolor='#999999', linewidth=2, clip_on=False)
+        self.fig.patches.extend([outline_box])
 
         self.fig.tight_layout()
+
 
     def update_graph(self, voltage_in, voltage_out):
         """Update the Matplotlib plot with the new reading."""
@@ -119,7 +125,7 @@ class HMIController:
         if len(self.data_out) > 60:
             self.data_out.pop(0)
 
-        # Find the minimum and maximum values from the combined data
+        # Find the minimum and maximum values
         voltage_in_min = min(self.data_in)
         voltage_in_max = max(self.data_in)
         voltage_out_min = min(self.data_out)
@@ -136,7 +142,7 @@ class HMIController:
         normalized_min_out = (voltage_out_min - y_axis_min) / y_range
         normalized_max_out = (voltage_out_max - y_axis_min) / y_range
 
-        # Use the normalized values to set the height and starting point of the blue rectangle
+        # Use the normalized values to set the height and starting point of the colored rectangle
         rect_height_in = normalized_max_in - normalized_min_in
         rect_y_in = 0.121 + normalized_min_in * 0.832  # Adjust starting point based on minimum value
 
@@ -178,13 +184,14 @@ class HMIController:
         # Set x-ticks to represent elapsed time
         self.ax.set_xticks([0, 15, 30, 45, 60])
         self.ax.set_xticklabels(['-60','-45', '-30', '-15', '60s'])
+        # Set rightmost x-tick to describe the x-axis
         xticks = self.ax.get_xticklabels()
         xticks[-1].set_color('#008000')
         xticks[-1].set_weight('bold')
 
         # Outline bar for in_voltage
         # x, y, width, height
-        rect = [0.9439, 0.121, 0.015, 0.832]  # Adjust these values as needed
+        rect = [0.9439, 0.121, 0.015, 0.832]
         voltage_in_outline = Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
                     facecolor='#D5D5D5', edgecolor='#999999', linewidth=1, clip_on=False)
         
@@ -198,7 +205,7 @@ class HMIController:
 
         # Outline bar for out_voltage
         # x, y, width, height
-        rect = [0.96, 0.121, 0.015, 0.832]  # Adjust these values as needed
+        rect = [0.96, 0.121, 0.015, 0.832]
         voltage_out_outline = Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
                     facecolor='#D5D5D5', edgecolor='#999999', linewidth=1, clip_on=False)
 

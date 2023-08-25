@@ -8,6 +8,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # Add the parent directory of this script to the system path to allow importing modules from there
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from Client.api_pymbtget import ModbusTCPClientAPI
+from dynamic_bar import DynamicBar
 
 IP_ADDRESS = "127.0.0.1"
 SERVER_PORT = 11502
@@ -29,6 +30,9 @@ class HMIController:
         
         # Initialization for periodic reading of holding register
         self._after_id = self.view.after(1000, self.read_holding_register_periodically)
+
+        self.dynamic_bar = DynamicBar(self.view)
+        self.dynamic_bar.canvas_widget.grid(row=0, column=5, pady=20, padx=20)
 
         # Bind the window's close event
         self.view.master.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -295,6 +299,9 @@ class HMIController:
             out_voltage_value = client.read_holding_register(1)
 
             client.close()
+
+            normalized_value = (in_voltage_value - 200) / 60  # Example normalization logic, modify as needed
+            self.dynamic_bar.set_value(normalized_value)
 
             # Update the graph with the new value
             self.update_graph(avg_in_value, out_voltage_value)

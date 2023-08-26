@@ -91,8 +91,19 @@ class HMIController:
             out_voltage_value = client.read_holding_register(1)
             client.close()
 
-            normalized_value = (in_voltage_value - 200) / 60  # Example normalization logic, modify as needed
-            self.dynamic_bar.set_value(normalized_value)
+            client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+            set_point = client.read_holding_register(2)
+            client.close()
+
+            client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+            min_set_point = client.read_holding_register(3)
+            client.close()
+
+            client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+            max_set_point = client.read_holding_register(4)
+            client.close()
+
+            self.dynamic_bar.set_value(min_set_point, max_set_point, set_point)
 
             # Update the graph with the new values
             self.graph.update_graph(in_voltage_value, out_voltage_value)

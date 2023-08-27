@@ -21,6 +21,12 @@ class GraphView:
         return sum(self.average_voltage_array) / len(self.average_voltage_array)
 
 
+    def create_rectangle(self, x, y, width, height, facecolor, edgecolor, linewidth, transform=None, clip_on=False):
+        """Utility function to create a rectangle with given parameters."""
+        return Rectangle((x, y), width, height, transform=transform or self.fig.transFigure, 
+                        facecolor=facecolor, edgecolor=edgecolor, linewidth=linewidth, clip_on=clip_on)
+
+
     def setup_view(self, master):
         """Setup the Matplotlib figure and axis."""
         # Set the figure background color
@@ -65,16 +71,12 @@ class GraphView:
         y_label_260.set_weight('bold')
 
         # Outline bar for in_voltage
-        # x, y, width, height
-        rect = [0.9439, 0.121, 0.015, 0.832]  # Adjust these values as needed
-        voltage_in_outline = Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
-                    facecolor='#D5D5D5', edgecolor='#999999', linewidth=1, clip_on=False)
+        voltage_in_outline = self.create_rectangle(0.9439, 0.121, 0.015, 0.832, '#D5D5D5', '#999999', 1)
+        self.fig.patches.extend([voltage_in_outline])
 
         # Outline bar for out_voltage
-        # x, y, width, height
-        rect = [0.96, 0.121, 0.015, 0.832]  # Adjust these values as needed
-        voltage_out_outline = Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
-                    facecolor='#D5D5D5', edgecolor='#999999', linewidth=1, clip_on=False)
+        voltage_out_outline = self.create_rectangle(0.96, 0.121, 0.015, 0.832, '#D5D5D5', '#999999', 1)
+        self.fig.patches.extend([voltage_out_outline])
 
         self.fig.patches.extend([voltage_in_outline, voltage_out_outline])
 
@@ -203,28 +205,18 @@ class GraphView:
         xticks[-1].set_weight('bold')
 
         # Outline bar for in_voltage
-        # x, y, width, height
-        rect = [0.9439, 0.121, 0.015, 0.832]
-        voltage_in_outline = Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
-                    facecolor='#D5D5D5', edgecolor='#999999', linewidth=1, clip_on=False)
-        
+        voltage_in_outline = self.create_rectangle(0.9439, 0.121, 0.015, 0.832, '#D5D5D5', '#999999', 1)
         self.fig.patches.extend([voltage_in_outline])
 
         # Inner bar representing the input voltage data range
-        voltage_in_bar = Rectangle((0.9439, rect_y_in), 0.015, rect_height_in * 0.832, transform=self.fig.transFigure, 
-                        facecolor='#0000D7', edgecolor='none', linewidth=0.5, clip_on=False)
-
-        self.fig.patches.extend([voltage_in_outline, voltage_in_bar])
+        voltage_in_bar = self.create_rectangle(0.9439, rect_y_in, 0.015, rect_height_in * 0.832, '#0000D7', 'none', 0.5)
+        self.fig.patches.extend([voltage_in_bar])
 
         # Outline bar for out_voltage
-        # x, y, width, height
-        rect = [0.96, 0.121, 0.015, 0.832]
-        voltage_out_outline = Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
-                    facecolor='#D5D5D5', edgecolor='#999999', linewidth=1, clip_on=False)
-
+        voltage_out_outline = self.create_rectangle(0.96, 0.121, 0.015, 0.832, '#D5D5D5', '#999999', 1)
+        
         # Inner bar representing the output voltage data range
-        voltage_out_bar = Rectangle((0.96, rect_y_out), 0.015, rect_height_out * 0.832, transform=self.fig.transFigure, 
-                        facecolor='#CC6600', edgecolor='none', linewidth=0.5, clip_on=False)
+        voltage_out_bar = self.create_rectangle(0.96, rect_y_out, 0.015, rect_height_out * 0.832, '#CC6600', 'none', 0.5)
 
         self.fig.patches.extend([voltage_out_outline, voltage_out_bar])
 

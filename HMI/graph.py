@@ -126,12 +126,41 @@ class GraphView:
         normalized_min_out = (voltage_out_min - y_axis_min) / y_range
         normalized_max_out = (voltage_out_max - y_axis_min) / y_range
 
+        # Clamp normalized values between 0 and 1
+        normalized_min_in = min(max(normalized_min_in, 0), 1)
+        normalized_max_in = min(max(normalized_max_in, 0), 1)
+
+        normalized_min_out = min(max(normalized_min_out, 0), 1)
+        normalized_max_out = min(max(normalized_max_out, 0), 1)
+
         # Use the normalized values to set the height and starting point of the colored rectangle
         rect_height_in = normalized_max_in - normalized_min_in
         rect_y_in = 0.121 + normalized_min_in * 0.832  # Adjust starting point based on minimum value
 
         rect_height_out = normalized_max_out - normalized_min_out
         rect_y_out = 0.121 + normalized_min_out * 0.832  # Adjust starting point based on minimum value
+
+        # For the in_voltage dynamic bar
+
+        # Ensure the base of the bar is not below the lower boundary
+        rect_y_in = max(0.121, rect_y_in)
+
+        # If the top of the dynamic bar exceeds the upper boundary, adjust the height and base
+        if rect_y_in + rect_height_in * 0.832 > 0.953:
+            overflow = (rect_y_in + rect_height_in * 0.832) - 0.953
+            rect_height_in -= overflow / 0.832
+            rect_y_in += overflow
+
+        # For the out_voltage dynamic bar
+
+        # Ensure the base of the bar is not below the lower boundary
+        rect_y_out = max(0.121, rect_y_out)
+
+        # If the top of the dynamic bar exceeds the upper boundary, adjust the height and base
+        if rect_y_out + rect_height_out * 0.832 > 0.953:
+            overflow = (rect_y_out + rect_height_out * 0.832) - 0.953
+            rect_height_out -= overflow / 0.832
+            rect_y_out += overflow
 
         # Update the Matplotlib plot
         self.ax.cla()

@@ -61,7 +61,7 @@ class ModbusServerTestCase(unittest.TestCase):
         register_index = 2
 
         # Set a test value for the holding register
-        test_value = 12
+        test_value = 228
 
         # Get the port number that was assigned
         port = self.server.socket.getsockname()[1]

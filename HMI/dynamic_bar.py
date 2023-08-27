@@ -68,6 +68,11 @@ class DynamicBar:
                                 facecolor='none', edgecolor='#999999', linewidth=2, clip_on=False)
         self.fig.patches.extend([outline_box])
 
+        # Initialize dynamic number below the outline bar with a placeholder
+        self.dynamic_number = self.ax.text(X_AXIS_OFFSET + BAR_WIDTH/2, Y_AXIS_OFFSET - 0.0275, '0', 
+                                   ha='center', va='top', fontsize=10, color='#0000D7', 
+                                   transform=self.fig.transFigure, weight='bold')
+
 
 
     def set_value(self, min_set_point, max_set_point, set_point):
@@ -101,6 +106,9 @@ class DynamicBar:
             self.warning_triangle.set_visible(True)
         else:
             self.warning_triangle.set_visible(False)
+
+        # Update dynamic number
+        self.dynamic_number.set_text(str(set_point))
 
         # Redraw the canvas to reflect the changes
         self.canvas.draw()

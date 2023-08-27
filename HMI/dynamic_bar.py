@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+from matplotlib.patches import Polygon
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 X_AXIS_OFFSET = 0.08
@@ -41,16 +42,32 @@ class DynamicBar:
         self.fig.patches.extend([self.dynamic_bar])
 
         # Create a square indicator rotated by 45 degrees (appearing as a diamond) inside the bar
-        self.square_size = 0.032
+        self.square_size = 0.0315
         self.square_indicator = Rectangle((X_AXIS_OFFSET + 0.022, Y_AXIS_CENTER), 
                                           self.square_size, self.square_size, angle=45, transform=self.fig.transFigure, 
                                           facecolor='#4A4A4A', edgecolor='none', clip_on=False)
         self.fig.patches.extend([self.square_indicator])
 
+        # Create a triangle indicator using a Polygon
+        triangle_base_size = 0.08
+        triangle_height = 0.09  # Calculated using Pythagoras theorem for equilateral triangle
+
+        triangle_x = X_AXIS_OFFSET + 0.022
+        triangle_y = Y_AXIS_CENTER + 0.34
+
+        triangle_vertices = [(triangle_x, triangle_y), 
+                            (triangle_x - triangle_base_size/2, triangle_y + triangle_height), 
+                            (triangle_x + triangle_base_size/2, triangle_y + triangle_height)]
+
+        self.warning_triangle = Polygon(triangle_vertices, transform=self.fig.transFigure, 
+                                        visible=False, facecolor='#FF0000', edgecolor='#000000', linewidth=1.5, clip_on=False)
+        self.fig.patches.extend([self.warning_triangle])
+
         # Add an outline box around the entire figure
         outline_box = Rectangle((0, 0), 1, 1, transform=self.fig.transFigure, 
                                 facecolor='none', edgecolor='#999999', linewidth=2, clip_on=False)
         self.fig.patches.extend([outline_box])
+
 
 
     def set_value(self, min_set_point, max_set_point, set_point):
@@ -78,6 +95,12 @@ class DynamicBar:
         # Make sure the indicator is not set outside area of bar
         square_y_position = max(0.098, min(0.698, square_y_position))
         self.square_indicator.set_y(square_y_position)
+
+        # Check if set_point is out of bounds and display warning triangle
+        if set_point < min_set_point or set_point > max_set_point:
+            self.warning_triangle.set_visible(True)
+        else:
+            self.warning_triangle.set_visible(False)
 
         # Redraw the canvas to reflect the changes
         self.canvas.draw()

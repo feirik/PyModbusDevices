@@ -46,6 +46,10 @@ BYTE_ROUND_UP = 7
 REGISTER_BYTE_SIZE = 2
 RESPONSE_HEADER_SIZE = 3
 
+SET_POINT_ADDRESS = 2
+MIN_SP_ADDRESS = 3
+MAX_SP_ADDRESS = 4
+
 class ModbusServer:
     def __init__(self, host, port, debug=False):
         self.debug = debug
@@ -83,20 +87,8 @@ class ModbusServer:
         while True:
             self.holding_registers[0] = random.randint(RANDOM_INPUT_V_LOWER, RANDOM_INPUT_V_UPPER)
 
-            # Get the set point from the set point holding register
+            # # Get the set point from the set point holding register
             set_point = self.holding_registers[2]
-
-            # If the set point is greater than the maximum set point and EnableOverride is not activated,
-            # set the set point to the maximum set point
-            if set_point > self.holding_registers[4] and not self.coils[1]:
-                self.holding_registers[2] = self.holding_registers[4]
-            # If the set point is less than the minimum set point and EnableOverride is not activated,
-            # set the set point to the minimum set point
-            elif set_point < self.holding_registers[3] and not self.coils[1]:
-                self.holding_registers[2] = self.holding_registers[3]
-            # Otherwise, use the current set point value
-            else:
-                self.holding_registers[2] = set_point
             
             # Let output voltage vary between +-1 of calculated set point
             variation = random.randint(-1, 1)
@@ -276,6 +268,20 @@ class ModbusServer:
 
             # Write the register value to the registers list
             self.holding_registers[register_address] = register_value
+
+            # Check minimum and maximum limits if attempt to write to set point register
+            if register_address == SET_POINT_ADDRESS:
+                # If the set point is greater than the maximum set point and EnableOverride is not activated,
+                # set the set point to the maximum set point
+                if register_value > self.holding_registers[MAX_SP_ADDRESS] and not self.coils[1]:
+                    self.holding_registers[SET_POINT_ADDRESS] = self.holding_registers[MAX_SP_ADDRESS]
+                # If the set point is less than the minimum set point and EnableOverride is not activated,
+                # set the set point to the minimum set point
+                elif register_value < self.holding_registers[MIN_SP_ADDRESS] and not self.coils[1]:
+                    self.holding_registers[SET_POINT_ADDRESS] = self.holding_registers[MIN_SP_ADDRESS]
+                # Otherwise, use the current set point value
+                else:
+                    self.holding_registers[SET_POINT_ADDRESS] = register_value
 
             # Pack the response data
             response_length = 6

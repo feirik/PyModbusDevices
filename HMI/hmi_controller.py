@@ -33,6 +33,26 @@ class HMIController:
 
         # Bind the window's close event
         self.view.master.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        # Add buttons to select graph view types
+        self.view.default_button = tk.Button(self.view, text="200-260V View", command=self.set_default_view)
+        self.view.default_button.grid(row=15, column=5)
+
+        self.view.low_button = tk.Button(self.view, text="100-140V View", command=self.set_low_view)
+        self.view.low_button.grid(row=16, column=5)
+
+        self.view.high_button = tk.Button(self.view, text="0-400V View", command=self.set_high_view)
+        self.view.high_button.grid(row=17, column=5)
+
+
+    def set_default_view(self):
+        self.graph.set_view_type('default')
+
+    def set_low_view(self):
+        self.graph.set_view_type('low')
+
+    def set_high_view(self):
+        self.graph.set_view_type('high')
         
 
     def read_coil(self):

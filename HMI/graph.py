@@ -2,15 +2,32 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+VIEW_RANGES = {
+    'default': {'limits': (200, 260), 'labels': (201, 258), 'y_pos_label': 216},
+    'low': {'limits': (100, 140), 'labels': (101, 139), 'y_pos_label': 110.6},
+    'high': {'limits': (0, 400), 'labels': (8, 390), 'y_pos_label': 110},
+}
+
 class GraphView:
     def __init__(self, master):
         """Initialize the Matplotlib figure and axis."""
         self.fig, self.ax = plt.subplots(figsize=(5, 3.2))
+        self.view_type = 'default'
+        self.master = master
         self.setup_view(master)
 
         self.data_in = []
         self.data_out = []
         self.average_voltage_array = []
+
+
+    def set_view_type(self, view_type):
+        """Set the view type and update the graph accordingly."""
+        if view_type in VIEW_RANGES:
+            self.view_type = view_type
+            self.setup_view(self.master)  # Use the stored master here
+        else:
+            raise ValueError(f"Invalid view type: {view_type}")
 
     
     def compute_average_voltage(self, voltage_value):
@@ -37,7 +54,9 @@ class GraphView:
         
         # Set consistent intervals for the X and Y axes
         self.ax.set_xlim(0, 60)  # Fixed at 60 seconds
-        self.ax.set_ylim(200, 260)  # Voltage range from 200 to 260
+
+        y_min, y_max = VIEW_RANGES[self.view_type]['limits']
+        self.ax.set_ylim(y_min, y_max)
 
         # Set x-ticks to represent elapsed time
         self.ax.set_xticks([0, 15, 30, 45, 60])
@@ -53,7 +72,7 @@ class GraphView:
         # Output voltage label
         voltage_out_label_text = f"0\nVoltage\nOut (V)"
         x_position = -5.72
-        y_position = 216
+        y_position = VIEW_RANGES[self.view_type]['y_pos_label']
         self.ax.text(x_position, y_position, voltage_out_label_text, 
             rotation=0, ha='center', va='center',
             bbox=dict(facecolor='none', edgecolor='#CC6600', boxstyle='square', linewidth=2))
@@ -61,14 +80,15 @@ class GraphView:
         self.ax.set_yticklabels([])
 
         # Manually add the y-labels at desired positions
-        y_label_200 = self.ax.text(-1.5, 201, '200', ha='right', va='center')
-        y_label_260 = self.ax.text(-1.5, 258, '260', ha='right', va='center')
+        label_min, label_max = VIEW_RANGES[self.view_type]['labels']
+        y_label_min = self.ax.text(-1.5, label_min, str(y_min), ha='right', va='center')
+        y_label_max = self.ax.text(-1.5, label_max, str(y_max), ha='right', va='center')
 
         # Format the y-labels
-        y_label_200.set_color('#008000')
-        y_label_200.set_weight('bold')
-        y_label_260.set_color('#008000')
-        y_label_260.set_weight('bold')
+        y_label_min.set_color('#008000')
+        y_label_min.set_weight('bold')
+        y_label_max.set_color('#008000')
+        y_label_max.set_weight('bold')
 
         # Outline bar for in_voltage
         voltage_in_outline = self.create_rectangle(0.9439, 0.121, 0.015, 0.832, '#D5D5D5', '#999999', 1)
@@ -118,8 +138,8 @@ class GraphView:
         voltage_out_max = max(self.data_out)
 
         # Normalize these values according to the y-axis range
-        y_axis_min = 200
-        y_axis_max = 260
+        y_axis_min, y_axis_max = VIEW_RANGES[self.view_type]['limits']
+        self.ax.set_ylim(y_axis_min, y_axis_max)
         y_range = y_axis_max - y_axis_min
 
         normalized_min_in = (voltage_in_min - y_axis_min) / y_range
@@ -143,7 +163,6 @@ class GraphView:
         rect_y_out = 0.121 + normalized_min_out * 0.832  # Adjust starting point based on minimum value
 
         # For the in_voltage dynamic bar
-
         # Ensure the base of the bar is not below the lower boundary
         rect_y_in = max(0.121, rect_y_in)
 
@@ -154,7 +173,6 @@ class GraphView:
             rect_y_in += overflow
 
         # For the out_voltage dynamic bar
-
         # Ensure the base of the bar is not below the lower boundary
         rect_y_out = max(0.121, rect_y_out)
 
@@ -179,7 +197,7 @@ class GraphView:
         # Output voltage label
         voltage_out_label_text = f"{voltage_out}\nVoltage\nOut (V)"
         x_position = -5.72
-        y_position = 216
+        y_position = VIEW_RANGES[self.view_type]['y_pos_label']
         self.ax.text(x_position, y_position, voltage_out_label_text, 
             rotation=0, ha='center', va='center',
             bbox=dict(facecolor='none', edgecolor='#CC6600', boxstyle='square', linewidth=2))
@@ -187,18 +205,20 @@ class GraphView:
         self.ax.set_yticklabels([])
 
         # Manually add the y-labels at desired positions
-        y_label_200 = self.ax.text(-1.5, 201, '200', ha='right', va='center')
-        y_label_260 = self.ax.text(-1.5, 258, '260', ha='right', va='center')
+        label_min, label_max = VIEW_RANGES[self.view_type]['labels']
+        y_label_min = self.ax.text(-1.5, label_min, str(y_axis_min), ha='right', va='center')
+        y_label_max = self.ax.text(-1.5, label_max, str(y_axis_max), ha='right', va='center')
 
         # Format the y-labels
-        y_label_200.set_color('#008000')
-        y_label_200.set_weight('bold')
-        y_label_260.set_color('#008000')
-        y_label_260.set_weight('bold')
+        y_label_min.set_color('#008000')
+        y_label_min.set_weight('bold')
+        y_label_max.set_color('#008000')
+        y_label_max.set_weight('bold')
 
         # Set x-ticks to represent elapsed time
         self.ax.set_xticks([0, 15, 30, 45, 60])
         self.ax.set_xticklabels(['-60','-45', '-30', '-15', '60s'])
+
         # Set rightmost x-tick to describe the x-axis
         xticks = self.ax.get_xticklabels()
         xticks[-1].set_color('#008000')
@@ -214,17 +234,17 @@ class GraphView:
 
         # Outline bar for out_voltage
         voltage_out_outline = self.create_rectangle(0.96, 0.121, 0.015, 0.832, '#D5D5D5', '#999999', 1)
-        
+
         # Inner bar representing the output voltage data range
         voltage_out_bar = self.create_rectangle(0.96, rect_y_out, 0.015, rect_height_out * 0.832, '#CC6600', 'none', 0.5)
-
         self.fig.patches.extend([voltage_out_outline, voltage_out_bar])
 
         plt.setp(self.ax.spines.values(), color='#999999')
 
         # Set the axes labels and grid
         self.ax.set_xlim(0, 60)  # Fixed at 60 seconds
-        self.ax.set_ylim(200, 260)  # Voltage range from 200 to 260
+        y_min, y_max = VIEW_RANGES[self.view_type]['limits']
+        self.ax.set_ylim(y_min, y_max)  # Use dynamic voltage range from VIEW_RANGES
         self.ax.grid(color='#999999', linestyle='--', linewidth=0.5, alpha=1)
         self.fig.tight_layout()
         self.canvas.draw()

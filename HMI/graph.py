@@ -108,7 +108,7 @@ class GraphView:
         # Embed the Matplotlib figure into the Tkinter window
         self.canvas = FigureCanvasTkAgg(self.fig, master=master)
         self.canvas_widget = self.canvas.get_tk_widget()
-        self.canvas_widget.grid(row=0, column=0, columnspan=2, pady=20, padx=20)
+        self.canvas_widget.grid(row=0, column=0, columnspan=4, rowspan=8, pady=20, padx=20)
 
         # Add an outline box around the entire figure
         outline_box = Rectangle((0, 0), 1, 1, transform=self.fig.transFigure, 

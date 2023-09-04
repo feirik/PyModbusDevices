@@ -8,6 +8,7 @@ from Client.api_pymbtget import ModbusTCPClientAPI
 from dynamic_bar import DynamicBar
 from graph import GraphView
 from indicator import Indicator
+from button import ButtonView
 
 IP_ADDRESS = "127.0.0.1"
 SERVER_PORT = 11502
@@ -30,18 +31,22 @@ class HMIController:
 
         self.indicator = Indicator(self.view)
 
+        # Initialize the ButtonView and grid it to the desired location
+        self.button_view = ButtonView(self.view)
+        self.button_view.canvas_widget.grid(row=9, column=5, columnspan=4, rowspan=8, pady=20, padx=20)
+
         # Bind the window's close event
         self.view.master.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        # Add buttons to select graph view types
-        self.view.default_button = tk.Button(self.view, text="200-260V View", command=self.set_default_view)
-        self.view.default_button.grid(row=9, column=5)
+        # # Add buttons to select graph view types
+        # self.view.default_button = tk.Button(self.view, text="200-260V View", command=self.set_default_view)
+        # self.view.default_button.grid(row=9, column=5)
 
-        self.view.low_button = tk.Button(self.view, text="100-140V View", command=self.set_low_view)
-        self.view.low_button.grid(row=10, column=5)
+        # self.view.low_button = tk.Button(self.view, text="100-140V View", command=self.set_low_view)
+        # self.view.low_button.grid(row=10, column=5)
 
-        self.view.high_button = tk.Button(self.view, text="0-400V View", command=self.set_high_view)
-        self.view.high_button.grid(row=11, column=5)
+        # self.view.high_button = tk.Button(self.view, text="0-400V View", command=self.set_high_view)
+        # self.view.high_button.grid(row=11, column=5)
 
 
     def set_default_view(self):
@@ -128,7 +133,7 @@ class HMIController:
             client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
             enable_override = client.read_coil(1)
             client.close()
-            
+
             self.indicator.update_status(enable_output, enable_override)
 
             # Save the after_id to cancel it later upon closing

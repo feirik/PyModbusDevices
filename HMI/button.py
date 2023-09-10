@@ -1,8 +1,21 @@
+import tkinter as tk
+import sys
+import os
+
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.widgets import Button
 from matplotlib.patches import Rectangle
-import tkinter as tk
+
+# Add the parent directory of this script to the system path to allow importing modules from there
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from Client.api_pymbtget import ModbusTCPClientAPI
+
+# TEMP values
+IP_ADDRESS = "127.0.0.1"
+SERVER_PORT = 11502
+TIMEOUT = 5
+UNIT_ID = 1
 
 
 class CustomInputDialog(tk.Toplevel):
@@ -14,7 +27,7 @@ class CustomInputDialog(tk.Toplevel):
         self.label = tk.Label(self, text=prompt)
         self.label.pack(pady=5)
 
-        self.entry = tk.Entry(self)
+        self.entry = tk.Entry(self, width=17)  # Set width of the Entry widget
         self.entry.pack(pady=0)
 
         self.button_frame = tk.Frame(self)  # Create a frame for the buttons
@@ -35,6 +48,7 @@ class CustomInputDialog(tk.Toplevel):
     def cancel(self):
         self.result = None
         self.destroy()
+
 
 
 class ButtonView:
@@ -59,31 +73,18 @@ class ButtonView:
         
     def _setup_view(self):
 
-        self.button_ax = self.fig.add_axes([0.1, 0.75, 0.3, 0.12])
+        self.sp_button_ax = self.fig.add_axes([0.075, 0.74, 0.314, 0.12])
         
         # Create the button with hover effect
-        self.button = Button(self.button_ax, 'UPDATE\nSET POINT', color='#999999', hovercolor='#008000')
-        self.button.on_clicked(self._on_button_click)
+        self.sp_button = Button(self.sp_button_ax, 'UPDATE\nSET POINT', color='#999999', hovercolor='#008000')
+        self.sp_button.on_clicked(self._on_button_click)
 
         # Give it a thick border (You can adjust the rectangle's linewidth for the desired thickness)
         # Here, the rectangle is slightly smaller than the full button
-        inset_ratio = 0.03  # 5% inset for the rectangle
-        rectangle = plt.Rectangle((inset_ratio, inset_ratio), 1 - 2*inset_ratio, 1 - 2*inset_ratio, 
+        inset_ratio = 0.03
+        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
                                   facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
-        self.button_ax.add_patch(rectangle)
-
-        # # Define an area (l, b, w, h) in the bottom right for the button
-        # button_ax = self.fig.add_axes([0.1, 0.75, 0.3, 0.12])
-
-        # # Give it a thick border (You can adjust the rectangle's linewidth for the desired thickness)
-        # rectangle = plt.Rectangle((0, 0), 1, 1, facecolor='#D5D5D5', edgecolor='#999999', linewidth=3.5)
-        # button_ax.add_patch(rectangle)
-
-        # # Create the button
-        # self.button = Button(button_ax, 'UPDATE\nSET POINT', color='#999999', hovercolor='#FFFFFF')
-        # self.button.on_clicked(self._on_button_click)
-
-
+        self.sp_button_ax.add_patch(rectangle)
 
         # Create faceplate zone
         rect = [0.465, 0.52, 0.51, 0.433]
@@ -137,19 +138,9 @@ class ButtonView:
                          va='center', fontsize=10, color='#4A4A4A', transform=self.fig.transFigure)
 
     def _on_button_click(self, event):
-        # Get the top-left corner of the widget
-        x = self.canvas._tkcanvas.winfo_rootx()
-        y = self.canvas._tkcanvas.winfo_rooty()
-
-        # Get the dimensions of the widget
-        width = self.canvas._tkcanvas.winfo_width()
-        height = self.canvas._tkcanvas.winfo_height()
-
-        # Calculate the position for the popup to appear adjacent to the bottom-right corner of the widget
+        
         x = 815
         y = 514
-
-        print(f"x: {x}, y: {y}")  # Debug print for coordinates
 
         # Display the custom input dialog
         dialog = CustomInputDialog(self.canvas._tkcanvas.master, "Update Value", "Enter value:", x, y)
@@ -157,5 +148,14 @@ class ButtonView:
         user_input = dialog.result
 
         if user_input is not None:
-            print(user_input)
+            try:
+                user_input = int(user_input)
+                print(user_input)
+
+                client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+                client.write_register(2, user_input)
+                client.close()
+                
+            except ValueError:
+                print("Entered value is not a valid integer!")
 

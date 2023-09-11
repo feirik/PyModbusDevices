@@ -18,39 +18,6 @@ SERVER_PORT = 11502
 TIMEOUT = 5
 UNIT_ID = 1
 
-
-class CustomInputDialog(tk.Toplevel):
-    def __init__(self, parent, title, prompt, x, y, width=225, height=106):
-        super().__init__(parent)
-        self.geometry(f"{width}x{height}+{x}+{y}")  # Set both position and dimensions
-        self.title(title)
-
-        self.label = tk.Label(self, text=prompt)
-        self.label.pack(pady=5)
-
-        self.entry = tk.Entry(self, width=17)  # Set width of the Entry widget
-        self.entry.pack(pady=0)
-
-        self.button_frame = tk.Frame(self)  # Create a frame for the buttons
-        self.button_frame.pack(pady=10)
-
-        self.submit_button = tk.Button(self.button_frame, text="Apply", command=self.submit)
-        self.submit_button.grid(row=0, column=0, padx=5)
-
-        self.cancel_button = tk.Button(self.button_frame, text="Cancel", command=self.cancel)
-        self.cancel_button.grid(row=0, column=1, padx=5)
-
-        self.result = None
-
-    def submit(self):
-        self.result = self.entry.get()
-        self.destroy()
-
-    def cancel(self):
-        self.result = None
-        self.destroy()
-
-
 class ButtonView:
     def __init__(self, master):
         self.fig, self.ax = plt.subplots(figsize=(4.4, 3.2))
@@ -78,7 +45,7 @@ class ButtonView:
         
         # Create the button with hover effect
         self.sp_button = Button(self.sp_button_ax, 'UPDATE\nSET POINT', color='#999999', hovercolor='#008000')
-        self.sp_button.on_clicked(partial(self._on_button_click_set_value, title="Update Set Point", prompt="Enter value:"))
+        self.sp_button.on_clicked(partial(self._on_button_click_set_value, title="Update Set Point", prompt="Enter value (0-1024):", addr=2))
 
         # Give it a thick border (You can adjust the rectangle's linewidth for the desired thickness)
         # Here, the rectangle is slightly smaller than the full button
@@ -139,30 +106,71 @@ class ButtonView:
                          va='center', fontsize=10, color='#4A4A4A', transform=self.fig.transFigure)
 
 
-    def _on_button_click_set_value(self, event, title, prompt):
-        
-        x = 815
-        y = 514
-
-        # Display the custom input dialog
-        dialog = CustomInputDialog(self.canvas._tkcanvas.master, title, prompt, x, y)
-        self.canvas._tkcanvas.master.wait_window(dialog)  # Wait until dialog is closed
-        user_input = dialog.result
+    def _on_button_click_set_value(self, event, title, prompt, addr):
+        # Display the custom input dialog and get the user input
+        self.input_dialog(title, prompt)
+        self.canvas._tkcanvas.master.wait_window(self.dialog_window)  # Wait until the dialog is closed
+        user_input = self.result
 
         if user_input is not None:
             try:
                 user_input = int(user_input)
-                print(user_input)
+                if 0 <= user_input <= 1024:
+                    print(user_input)
 
-                client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
-                client.write_register(2, user_input)
-                client.close()
-                
+                    client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+                    client.write_register(addr, user_input)
+                    client.close()
+                else:
+                    self.error_dialog("Input out of range.")
+
             except ValueError:
-                self.show_error_dialog("Invalid input")
+                self.error_dialog("Invalid input.")
 
 
-    def show_error_dialog(self, message):
+
+    def input_dialog(self, title, prompt):
+        x = 815
+        y = 514
+        width = 225
+        height = 106
+
+        self.dialog_window = tk.Toplevel(self.canvas._tkcanvas.master)
+        self.dialog_window.geometry(f"{width}x{height}+{x}+{y}")
+        self.dialog_window.title(title)
+
+        # Set the column weights. The center columns (1 and 2) have higher weights.
+        self.dialog_window.grid_columnconfigure(0, weight=1)
+        self.dialog_window.grid_columnconfigure(1, weight=2)
+        self.dialog_window.grid_columnconfigure(2, weight=2)
+        self.dialog_window.grid_columnconfigure(3, weight=1)
+
+        label = tk.Label(self.dialog_window, text=prompt)
+        label.grid(row=0, column=1, columnspan=2, pady=5)
+
+        self.entry = tk.Entry(self.dialog_window, width=15)
+        self.entry.grid(row=1, column=1, columnspan=2, pady=0)
+
+        submit_button = tk.Button(self.dialog_window, text="Apply", command=self.submit_input)
+        submit_button.grid(row=2, column=1, padx=5, pady=10, sticky=tk.E)
+
+        cancel_button = tk.Button(self.dialog_window, text="Cancel", command=self.cancel_input)
+        cancel_button.grid(row=2, column=2, padx=5, pady=10, sticky=tk.W)
+
+        # Bind the close window action (clicking the 'X' button) to the close_window method
+        self.dialog_window.protocol("WM_DELETE_WINDOW", self.close_window)
+
+
+    def submit_input(self):
+        self.result = self.entry.get()
+        self.dialog_window.destroy()
+
+    def cancel_input(self):
+        self.result = None
+        self.dialog_window.destroy()
+
+
+    def error_dialog(self, message):
         x = 815
         y = 514
         width = 225
@@ -170,12 +178,14 @@ class ButtonView:
 
         error_window = tk.Toplevel(self.canvas._tkcanvas.master)
         error_window.geometry(f"{width}x{height}+{x}+{y}")
-        error_window.title("Error")
+        error_window.title("ERROR")
 
         label = tk.Label(error_window, text=message)
         label.pack(pady=15)
 
-        ok_button = tk.Button(error_window, text="OK", command=error_window.destroy, width=12)  # Set width to 20 characters
+        ok_button = tk.Button(error_window, text="OK", command=error_window.destroy, width=12)
         ok_button.pack(pady=10)
 
-
+    def close_window(self):
+        self.result = None
+        self.dialog_window.destroy()

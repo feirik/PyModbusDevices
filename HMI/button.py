@@ -1,6 +1,7 @@
 import tkinter as tk
 import sys
 import os
+from functools import partial
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -50,7 +51,6 @@ class CustomInputDialog(tk.Toplevel):
         self.destroy()
 
 
-
 class ButtonView:
     def __init__(self, master):
         self.fig, self.ax = plt.subplots(figsize=(4.4, 3.2))
@@ -71,13 +71,14 @@ class ButtonView:
         self.canvas = FigureCanvasTkAgg(self.fig, master=master)
         self.canvas_widget = self.canvas.get_tk_widget()
         
+
     def _setup_view(self):
 
         self.sp_button_ax = self.fig.add_axes([0.075, 0.74, 0.314, 0.12])
         
         # Create the button with hover effect
         self.sp_button = Button(self.sp_button_ax, 'UPDATE\nSET POINT', color='#999999', hovercolor='#008000')
-        self.sp_button.on_clicked(self._on_button_click)
+        self.sp_button.on_clicked(partial(self._on_button_click_set_value, title="Update Set Point", prompt="Enter value:"))
 
         # Give it a thick border (You can adjust the rectangle's linewidth for the desired thickness)
         # Here, the rectangle is slightly smaller than the full button
@@ -137,13 +138,14 @@ class ButtonView:
         self.desc_text = self.ax.text(center_x, y_placement, "MANUAL ACTIONS", weight='bold', ha='center',
                          va='center', fontsize=10, color='#4A4A4A', transform=self.fig.transFigure)
 
-    def _on_button_click(self, event):
+
+    def _on_button_click_set_value(self, event, title, prompt):
         
         x = 815
         y = 514
 
         # Display the custom input dialog
-        dialog = CustomInputDialog(self.canvas._tkcanvas.master, "Update Value", "Enter value:", x, y)
+        dialog = CustomInputDialog(self.canvas._tkcanvas.master, title, prompt, x, y)
         self.canvas._tkcanvas.master.wait_window(dialog)  # Wait until dialog is closed
         user_input = dialog.result
 
@@ -157,5 +159,23 @@ class ButtonView:
                 client.close()
                 
             except ValueError:
-                print("Entered value is not a valid integer!")
+                self.show_error_dialog("Invalid input")
+
+
+    def show_error_dialog(self, message):
+        x = 815
+        y = 514
+        width = 225
+        height = 106
+
+        error_window = tk.Toplevel(self.canvas._tkcanvas.master)
+        error_window.geometry(f"{width}x{height}+{x}+{y}")
+        error_window.title("Error")
+
+        label = tk.Label(error_window, text=message)
+        label.pack(pady=15)
+
+        ok_button = tk.Button(error_window, text="OK", command=error_window.destroy, width=12)  # Set width to 20 characters
+        ok_button.pack(pady=10)
+
 

@@ -1,6 +1,4 @@
 import tkinter as tk
-import sys
-import os
 from functools import partial
 
 import matplotlib.pyplot as plt
@@ -8,18 +6,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.widgets import Button
 from matplotlib.patches import Rectangle
 
-# Add the parent directory of this script to the system path to allow importing modules from there
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from Client.api_pymbtget import ModbusTCPClientAPI
-
-# TEMP values
-IP_ADDRESS = "127.0.0.1"
-SERVER_PORT = 11502
-TIMEOUT = 5
-UNIT_ID = 1
-
 class ButtonView:
-    def __init__(self, master):
+    def __init__(self, master, controller):
+        self.controller = controller
         self.fig, self.ax = plt.subplots(figsize=(4.4, 3.2))
         
         # Hide the default axis
@@ -40,7 +29,6 @@ class ButtonView:
         
 
     def _setup_view(self):
-
         # Set point button
         self.sp_button_ax = self.fig.add_axes([0.075, 0.74, 0.314, 0.12])
         
@@ -98,7 +86,38 @@ class ButtonView:
                                   facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
         self.en_override_button_ax.add_patch(rectangle)
 
-        
+        # View 0-400V button
+        self.high_view_button_ax = self.fig.add_axes([0.495, 0.295, 0.25, 0.07])
+
+        # Create the button with hover effect
+        self.high_view_button = Button(self.high_view_button_ax, '0-400V', color='#999999', hovercolor='#008000')
+        self.high_view_button.on_clicked(self.controller.set_high_view)
+
+        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
+                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+        self.high_view_button_ax.add_patch(rectangle)
+
+        # View 200-260V button
+        self.def_view_button_ax = self.fig.add_axes([0.495, 0.1875, 0.25, 0.07])
+
+        # Create the button with hover effect
+        self.def_view_button = Button(self.def_view_button_ax, '200-260V', color='#999999', hovercolor='#008000')
+        self.def_view_button.on_clicked(self.controller.set_default_view)
+
+        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
+                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+        self.def_view_button_ax.add_patch(rectangle)
+
+        # View 100-140V button
+        self.low_view_button_ax = self.fig.add_axes([0.495, 0.08, 0.25, 0.07])
+
+        # Create the button with hover effect
+        self.low_view_button = Button(self.low_view_button_ax, '100-140V', color='#999999', hovercolor='#008000')
+        self.low_view_button.on_clicked(self.controller.set_low_view)
+
+        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
+                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+        self.low_view_button_ax.add_patch(rectangle)
 
         # Create faceplate zone
         rect = [0.465, 0.52, 0.51, 0.433]
@@ -117,7 +136,7 @@ class ButtonView:
         self.desc_text = self.ax.text(center_x, center_y, "Reserved Faceplate Zone\n", weight='bold', ha='center',
                          va='center', fontsize=10, color='#4A4A4A', transform=self.fig.transFigure)
 
-        # Create reserved information block
+        # Create select view rectangle
         rect = [0.465, 0.045, 0.31, 0.40]
 
         # Add the rectangle to the axis instead of the figure
@@ -128,10 +147,10 @@ class ButtonView:
 
         # Calculate the center of the rectangle
         center_x = rect[0] + rect[2] / 2
-        center_y = rect[1] + rect[3] / 2 - 0.02
+        y_placement = 0.405
 
         # Add text to the rectangle
-        self.desc_text = self.ax.text(center_x, center_y, "Set View", weight='bold', ha='center',
+        self.desc_text = self.ax.text(center_x, y_placement, "SELECT VIEW", weight='bold', ha='center',
                          va='center', fontsize=10, color='#4A4A4A', transform=self.fig.transFigure)
 
         # Create manual actions zone
@@ -151,6 +170,24 @@ class ButtonView:
         self.desc_text = self.ax.text(center_x, y_placement, "MANUAL ACTIONS", weight='bold', ha='center',
                          va='center', fontsize=10, color='#4A4A4A', transform=self.fig.transFigure)
 
+        # Create info rectangle
+        rect = [0.8, 0.045, 0.175, 0.40]
+
+        # Add the rectangle to the axis instead of the figure
+        self.description_box = self.ax.add_patch(
+            Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
+                    facecolor='#D5D5D5', edgecolor='#999999', linewidth=1, clip_on=False)
+        )
+
+        # Calculate the center of the rectangle
+        center_x = rect[0] + rect[2] / 2
+        center_y = rect[1] + rect[3] / 2 - 0.02
+
+        # Add text to the rectangle
+        self.desc_text = self.ax.text(center_x, center_y, "Static\nInfo\nZone", weight='bold', ha='center',
+                         va='center', fontsize=10, color='#4A4A4A', transform=self.fig.transFigure)
+
+
 
     def _on_button_click_set_value(self, event, title, prompt, addr):
         # Display the custom input dialog and get the user input
@@ -162,11 +199,10 @@ class ButtonView:
             try:
                 user_input = int(user_input)
                 if 0 <= user_input <= 1024:
-                    print(user_input)
-
-                    client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
-                    client.write_register(addr, user_input)
-                    client.close()
+                    # Check the result of the write operation
+                    success = self.controller.write_register(addr, user_input)
+                    if not success:
+                        self.error_dialog("Register write failed.")
                 else:
                     self.error_dialog("Input out of range.")
 
@@ -181,20 +217,13 @@ class ButtonView:
         confirmed = self.result
 
         if confirmed:
-            # Read the current coil value
-            modbus_client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
-            current_value = modbus_client.read_coil(addr)
-            print(f"Read single value - Read Coil Result: {current_value}")
-            modbus_client.close()
+            current_value = self.controller.read_coil(addr)
 
             # Toggle the value
             toggled_value = 1 if current_value == 0 else 0
 
             # Write the toggled value back to the coil
-            modbus_client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
-            result = modbus_client.write_coil(addr, toggled_value)
-            print(f"Updated write - Write Coil Result: {result}")
-            modbus_client.close()
+            result = self.controller.write_coil(addr, toggled_value)
 
 
     def input_dialog(self, title, prompt):

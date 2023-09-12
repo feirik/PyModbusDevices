@@ -32,66 +32,41 @@ class HMIController:
         self.indicator = Indicator(self.view)
 
         # Initialize the ButtonView and grid it to the desired location
-        self.button_view = ButtonView(self.view)
+        self.button_view = ButtonView(self.view, self)
+        #self.button_view = ButtonView(self.view)
         self.button_view.canvas_widget.grid(row=9, column=5, columnspan=4, rowspan=8, pady=20, padx=20)
 
         # Bind the window's close event
         self.view.master.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        # # Add buttons to select graph view types
-        # self.view.default_button = tk.Button(self.view, text="200-260V View", command=self.set_default_view)
-        # self.view.default_button.grid(row=9, column=5)
 
-        # self.view.low_button = tk.Button(self.view, text="100-140V View", command=self.set_low_view)
-        # self.view.low_button.grid(row=10, column=5)
-
-        # self.view.high_button = tk.Button(self.view, text="0-400V View", command=self.set_high_view)
-        # self.view.high_button.grid(row=11, column=5)
-
-
-    def set_default_view(self):
+    def set_default_view(self, event=None):
         self.graph.set_view_type('default')
 
-    def set_low_view(self):
+    def set_low_view(self, event=None):
         self.graph.set_view_type('low')
 
-    def set_high_view(self):
+    def set_high_view(self, event=None):
         self.graph.set_view_type('high')
-        
 
-    def read_coil(self):
-        try:
-            # Get coil address from Entry field
-            coil_address = int(self.view.coil_address_entry.get() or "100")
 
-            # Create a new Modbus client for the operation
-            client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
-            
-            # Use the updated single coil read method
-            result = client.read_coil(coil_address)
+    def write_register(self, addr, value):
+        client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+        result = client.write_register(addr, value)
+        client.close()
+        return result
 
-            client.close()
+    def read_coil(self, addr):
+        client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+        current_value = client.read_coil(addr)
+        client.close()
+        return current_value
 
-        except Exception as e:
-            print('Error:', e)
-
-    def write_coil(self):
-        try:
-            # Get coil address and value from Entry fields
-            coil_address = int(self.view.coil_address_entry.get() or "100")
-            coil_value = bool(int(self.view.coil_value_entry.get() or "0"))
-
-            # Create a new Modbus client for the operation
-            client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
-
-            # Use Modbus client to write coil
-            result = client.write_coil(coil_address, coil_value)
-
-            client.close()
-
-        except Exception as e:
-            print('Error:', e)
-
+    def write_coil(self, addr, value):
+        client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+        result = client.write_coil(addr, value)
+        client.close()
+        return result
 
     # Method to read the holding register
     def read_holding_register_periodically(self):

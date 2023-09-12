@@ -41,18 +41,64 @@ class ButtonView:
 
     def _setup_view(self):
 
+        # Set point button
         self.sp_button_ax = self.fig.add_axes([0.075, 0.74, 0.314, 0.12])
         
         # Create the button with hover effect
-        self.sp_button = Button(self.sp_button_ax, 'UPDATE\nSET POINT', color='#999999', hovercolor='#008000')
+        self.sp_button = Button(self.sp_button_ax, 'SET\nSET POINT', color='#999999', hovercolor='#008000')
         self.sp_button.on_clicked(partial(self._on_button_click_set_value, title="Update Set Point", prompt="Enter value (0-1024):", addr=2))
 
         # Give it a thick border (You can adjust the rectangle's linewidth for the desired thickness)
         # Here, the rectangle is slightly smaller than the full button
-        inset_ratio = 0.03
         rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
                                   facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
         self.sp_button_ax.add_patch(rectangle)
+
+        # Max limit button
+        self.max_button_ax = self.fig.add_axes([0.075, 0.575, 0.314, 0.12])
+        
+        # Create the button with hover effect
+        self.max_button = Button(self.max_button_ax, 'SET\nMAX LIMIT', color='#999999', hovercolor='#008000')
+        self.max_button.on_clicked(partial(self._on_button_click_set_value, title="Set Max Limit", prompt="Enter value (0-1024):", addr=4))
+
+        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
+                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+        self.max_button_ax.add_patch(rectangle)
+
+        # Min limit button
+        self.min_button_ax = self.fig.add_axes([0.075, 0.41, 0.314, 0.12])
+
+        # Create the button with hover effect
+        self.min_button = Button(self.min_button_ax, 'SET\nMIN LIMIT', color='#999999', hovercolor='#008000')
+        self.min_button.on_clicked(partial(self._on_button_click_set_value, title="Set Min Limit", prompt="Enter value (0-1024):", addr=3))
+
+        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
+                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+        self.min_button_ax.add_patch(rectangle)
+
+        # Enable output toggle button
+        self.en_output_button_ax = self.fig.add_axes([0.075, 0.245, 0.314, 0.12])
+
+        # Create the button with hover effect
+        self.en_output_button = Button(self.en_output_button_ax, 'TOGGLE\nENABLE OUTPUT', color='#999999', hovercolor='#008000')
+        self.en_output_button.on_clicked(partial(self._on_toggle_button_click, title="Change Enable Output", prompt="Enable output will be toggeled.", addr=0))
+
+        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
+                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+        self.en_output_button_ax.add_patch(rectangle)
+
+        # Enable override toggle button
+        self.en_override_button_ax = self.fig.add_axes([0.075, 0.08, 0.314, 0.12])
+
+        # Create the button with hover effect
+        self.en_override_button = Button(self.en_override_button_ax, 'TOGGLE\nENBL OVERRIDE', color='#999999', hovercolor='#008000')
+        self.en_override_button.on_clicked(partial(self._on_toggle_button_click, title="Change Enable Override", prompt="Enable override will be toggeled.", addr=1))
+
+        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
+                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+        self.en_override_button_ax.add_patch(rectangle)
+
+        
 
         # Create faceplate zone
         rect = [0.465, 0.52, 0.51, 0.433]
@@ -128,6 +174,28 @@ class ButtonView:
                 self.error_dialog("Invalid input.")
 
 
+    def _on_toggle_button_click(self, event, title, prompt, addr):
+        # Display the toggle dialog
+        self.toggle_dialog(title, prompt)
+        self.canvas._tkcanvas.master.wait_window(self.dialog_window)  # Wait until the dialog is closed
+        confirmed = self.result
+
+        if confirmed:
+            # Read the current coil value
+            modbus_client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+            current_value = modbus_client.read_coil(addr)
+            print(f"Read single value - Read Coil Result: {current_value}")
+            modbus_client.close()
+
+            # Toggle the value
+            toggled_value = 1 if current_value == 0 else 0
+
+            # Write the toggled value back to the coil
+            modbus_client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+            result = modbus_client.write_coil(addr, toggled_value)
+            print(f"Updated write - Write Coil Result: {result}")
+            modbus_client.close()
+
 
     def input_dialog(self, title, prompt):
         x = 815
@@ -154,8 +222,37 @@ class ButtonView:
         submit_button = tk.Button(self.dialog_window, text="Apply", command=self.submit_input)
         submit_button.grid(row=2, column=1, padx=5, pady=10, sticky=tk.E)
 
-        cancel_button = tk.Button(self.dialog_window, text="Cancel", command=self.cancel_input)
+        cancel_button = tk.Button(self.dialog_window, text="Cancel", command=self.cancel_window)
         cancel_button.grid(row=2, column=2, padx=5, pady=10, sticky=tk.W)
+
+        # Bind the close window action (clicking the 'X' button) to the close_window method
+        self.dialog_window.protocol("WM_DELETE_WINDOW", self.close_window)
+
+
+    def toggle_dialog(self, title, prompt):
+        x = 815
+        y = 514
+        width = 225
+        height = 106
+
+        self.dialog_window = tk.Toplevel(self.canvas._tkcanvas.master)
+        self.dialog_window.geometry(f"{width}x{height}+{x}+{y}")
+        self.dialog_window.title(title)
+
+        # Set the column weights. The center columns (1 and 2) have higher weights.
+        self.dialog_window.grid_columnconfigure(0, weight=1)
+        self.dialog_window.grid_columnconfigure(1, weight=2)
+        self.dialog_window.grid_columnconfigure(2, weight=2)
+        self.dialog_window.grid_columnconfigure(3, weight=1)
+
+        label = tk.Label(self.dialog_window, text=prompt)
+        label.grid(row=0, column=1, columnspan=2, pady=15)
+
+        confirm_button = tk.Button(self.dialog_window, text="Confirm", command=self.confirm_toggle)
+        confirm_button.grid(row=1, column=1, padx=5, pady=10, sticky=tk.E)
+
+        cancel_button = tk.Button(self.dialog_window, text="Cancel", command=self.cancel_window)
+        cancel_button.grid(row=1, column=2, padx=5, pady=10, sticky=tk.W)
 
         # Bind the close window action (clicking the 'X' button) to the close_window method
         self.dialog_window.protocol("WM_DELETE_WINDOW", self.close_window)
@@ -165,8 +262,12 @@ class ButtonView:
         self.result = self.entry.get()
         self.dialog_window.destroy()
 
-    def cancel_input(self):
+    def cancel_window(self):
         self.result = None
+        self.dialog_window.destroy()
+
+    def confirm_toggle(self):
+        self.result = True
         self.dialog_window.destroy()
 
 

@@ -5,6 +5,7 @@ import sys
 # Add the parent directory of this script to the system path to allow importing modules from there
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from Client.api_pymbtget import ModbusTCPClientAPI
+
 from dynamic_bar import DynamicBar
 from graph import GraphView
 from indicator import Indicator
@@ -33,7 +34,6 @@ class HMIController:
 
         # Initialize the ButtonView and grid it to the desired location
         self.button_view = ButtonView(self.view, self)
-        #self.button_view = ButtonView(self.view)
         self.button_view.canvas_widget.grid(row=9, column=5, columnspan=4, rowspan=8, pady=20, padx=20)
 
         # Bind the window's close event
@@ -75,40 +75,48 @@ class HMIController:
             self.view.after_cancel(self._after_id)
         
         try:
-            # Create a new Modbus client for the operation
+            # Read input voltage
             client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
-            in_voltage_value = client.read_holding_register(0) # Reading from address 0
+            in_voltage_value = client.read_holding_register(0)
             client.close()
 
+            # Read output voltage
             client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
             out_voltage_value = client.read_holding_register(1)
             client.close()
 
-            # Update the graph with the new values
+            # Update the graph with input and output voltage values
             self.graph.update_graph(in_voltage_value, out_voltage_value)
 
+            # Read set point
             client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
             set_point = client.read_holding_register(2)
             client.close()
 
+            # Read minimum set point limit
             client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
             min_set_point = client.read_holding_register(3)
             client.close()
 
+            # Read maximum set point limit
             client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
             max_set_point = client.read_holding_register(4)
             client.close()
 
+            # Update the dynamic bar with read values
             self.dynamic_bar.set_value(min_set_point, max_set_point, set_point)
 
+            # Read enable output coil status
             client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
             enable_output = client.read_coil(0)
             client.close()
 
+            # Read enable override coil status
             client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
             enable_override = client.read_coil(1)
             client.close()
 
+            # Update indicator statuses with read coil values
             self.indicator.update_status(enable_output, enable_override)
 
             # Save the after_id to cancel it later upon closing

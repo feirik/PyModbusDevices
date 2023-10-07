@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.widgets import Button
 from matplotlib.patches import Rectangle
+from colors import HPHMI
 
 class ButtonView:
     def __init__(self, master, controller):
@@ -15,9 +16,9 @@ class ButtonView:
         self.ax.axis('off')
         
         # Style attributes
-        self.fig.patch.set_facecolor('#D5D5D5')  # Set figure background color
+        self.fig.patch.set_facecolor(HPHMI.gray)  # Set figure background color
         outline_box = Rectangle((0, 0), 1, 1, transform=self.fig.transFigure, 
-                                facecolor='none', edgecolor='#999999', linewidth=2, clip_on=False)
+                                facecolor='none', edgecolor=HPHMI.dark_gray, linewidth=2, clip_on=False)
         self.fig.patches.extend([outline_box])
 
         # Initial setup
@@ -33,90 +34,90 @@ class ButtonView:
         self.sp_button_ax = self.fig.add_axes([0.075, 0.74, 0.314, 0.12])
         
         # Create the button with hover effect
-        self.sp_button = Button(self.sp_button_ax, 'SET\nSET POINT', color='#999999', hovercolor='#008000')
+        self.sp_button = Button(self.sp_button_ax, 'SET\nSET POINT', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.sp_button.on_clicked(partial(self._on_button_click_set_value, title="Update Set Point", prompt="Enter value (0-1024):", addr=2))
 
         # Give it a thick border (You can adjust the rectangle's linewidth for the desired thickness)
         # Here, the rectangle is slightly smaller than the full button
         rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
         self.sp_button_ax.add_patch(rectangle)
 
         # Max limit button
         self.max_button_ax = self.fig.add_axes([0.075, 0.575, 0.314, 0.12])
         
         # Create the button with hover effect
-        self.max_button = Button(self.max_button_ax, 'SET\nMAX LIMIT', color='#999999', hovercolor='#008000')
+        self.max_button = Button(self.max_button_ax, 'SET\nMAX LIMIT', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.max_button.on_clicked(partial(self._on_button_click_set_value, title="Set Max Limit", prompt="Enter value (0-1024):", addr=4))
 
         rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
         self.max_button_ax.add_patch(rectangle)
 
         # Min limit button
         self.min_button_ax = self.fig.add_axes([0.075, 0.41, 0.314, 0.12])
 
         # Create the button with hover effect
-        self.min_button = Button(self.min_button_ax, 'SET\nMIN LIMIT', color='#999999', hovercolor='#008000')
+        self.min_button = Button(self.min_button_ax, 'SET\nMIN LIMIT', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.min_button.on_clicked(partial(self._on_button_click_set_value, title="Set Min Limit", prompt="Enter value (0-1024):", addr=3))
 
         rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
         self.min_button_ax.add_patch(rectangle)
 
         # Enable output toggle button
         self.en_output_button_ax = self.fig.add_axes([0.075, 0.245, 0.314, 0.12])
 
         # Create the button with hover effect
-        self.en_output_button = Button(self.en_output_button_ax, 'TOGGLE\nENABLE OUTPUT', color='#999999', hovercolor='#008000')
+        self.en_output_button = Button(self.en_output_button_ax, 'TOGGLE\nENABLE OUTPUT', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.en_output_button.on_clicked(partial(self._on_toggle_button_click, title="Change Enable Output", prompt="Enable output will be toggeled.", addr=0))
 
         rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
         self.en_output_button_ax.add_patch(rectangle)
 
         # Enable override toggle button
         self.en_override_button_ax = self.fig.add_axes([0.075, 0.08, 0.314, 0.12])
 
         # Create the button with hover effect
-        self.en_override_button = Button(self.en_override_button_ax, 'TOGGLE\nENBL OVERRIDE', color='#999999', hovercolor='#008000')
+        self.en_override_button = Button(self.en_override_button_ax, 'TOGGLE\nENBL OVERRIDE', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.en_override_button.on_clicked(partial(self._on_toggle_button_click, title="Change Enable Override", prompt="Enable override will be toggeled.", addr=1))
 
         rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
         self.en_override_button_ax.add_patch(rectangle)
 
         # View 0-400V button
         self.high_view_button_ax = self.fig.add_axes([0.495, 0.295, 0.25, 0.07])
 
         # Create the button with hover effect
-        self.high_view_button = Button(self.high_view_button_ax, '0-400V', color='#999999', hovercolor='#008000')
+        self.high_view_button = Button(self.high_view_button_ax, '0-400V', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.high_view_button.on_clicked(self.controller.set_high_view)
 
         rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
         self.high_view_button_ax.add_patch(rectangle)
 
         # View 200-260V button
         self.def_view_button_ax = self.fig.add_axes([0.495, 0.1875, 0.25, 0.07])
 
         # Create the button with hover effect
-        self.def_view_button = Button(self.def_view_button_ax, '200-260V', color='#999999', hovercolor='#008000')
+        self.def_view_button = Button(self.def_view_button_ax, '200-260V', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.def_view_button.on_clicked(self.controller.set_default_view)
 
         rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
         self.def_view_button_ax.add_patch(rectangle)
 
         # View 100-140V button
         self.low_view_button_ax = self.fig.add_axes([0.495, 0.08, 0.25, 0.07])
 
         # Create the button with hover effect
-        self.low_view_button = Button(self.low_view_button_ax, '100-140V', color='#999999', hovercolor='#008000')
+        self.low_view_button = Button(self.low_view_button_ax, '100-140V', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.low_view_button.on_clicked(self.controller.set_low_view)
 
         rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor='#D5D5D5', edgecolor='#999999', linewidth=1.5)
+                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
         self.low_view_button_ax.add_patch(rectangle)
 
         # Create faceplate zone
@@ -125,7 +126,7 @@ class ButtonView:
         # Add the rectangle to the axis instead of the figure
         self.description_box = self.ax.add_patch(
             Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
-                    facecolor='#D5D5D5', edgecolor='#999999', linewidth=1, clip_on=False)
+                    facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1, clip_on=False)
         )
 
         # Calculate the center of the rectangle
@@ -134,7 +135,7 @@ class ButtonView:
 
         # Add text to the rectangle
         self.desc_text = self.ax.text(center_x, center_y, "Reserved Faceplate Zone\n", weight='bold', ha='center',
-                         va='center', fontsize=10, color='#4A4A4A', transform=self.fig.transFigure)
+                         va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
 
         # Create select view rectangle
         rect = [0.465, 0.045, 0.31, 0.40]
@@ -142,7 +143,7 @@ class ButtonView:
         # Add the rectangle to the axis instead of the figure
         self.description_box = self.ax.add_patch(
             Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
-                    facecolor='#D5D5D5', edgecolor='#999999', linewidth=1, clip_on=False)
+                    facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1, clip_on=False)
         )
 
         # Calculate the center of the rectangle
@@ -151,7 +152,7 @@ class ButtonView:
 
         # Add text to the rectangle
         self.desc_text = self.ax.text(center_x, y_placement, "SELECT VIEW", weight='bold', ha='center',
-                         va='center', fontsize=10, color='#4A4A4A', transform=self.fig.transFigure)
+                         va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
 
         # Create manual actions zone
         rect = [0.028, 0.045, 0.41, 0.907]
@@ -159,7 +160,7 @@ class ButtonView:
         # Add the rectangle to the axis instead of the figure
         self.description_box = self.ax.add_patch(
             Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
-                    facecolor='#D5D5D5', edgecolor='#999999', linewidth=1, clip_on=False)
+                    facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1, clip_on=False)
         )
 
         # Calculate the center of the rectangle
@@ -168,7 +169,7 @@ class ButtonView:
 
         # Add text to the rectangle
         self.desc_text = self.ax.text(center_x, y_placement, "MANUAL ACTIONS", weight='bold', ha='center',
-                         va='center', fontsize=10, color='#4A4A4A', transform=self.fig.transFigure)
+                         va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
 
         # Create info rectangle
         rect = [0.8, 0.045, 0.175, 0.40]
@@ -176,7 +177,7 @@ class ButtonView:
         # Add the rectangle to the axis instead of the figure
         self.description_box = self.ax.add_patch(
             Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
-                    facecolor='#D5D5D5', edgecolor='#999999', linewidth=1, clip_on=False)
+                    facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1, clip_on=False)
         )
 
         # Calculate the center of the rectangle
@@ -185,7 +186,7 @@ class ButtonView:
 
         # Add text to the rectangle
         self.desc_text = self.ax.text(center_x, center_y, "Static\nInfo\nZone", weight='bold', ha='center',
-                         va='center', fontsize=10, color='#4A4A4A', transform=self.fig.transFigure)
+                         va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
 
 
 

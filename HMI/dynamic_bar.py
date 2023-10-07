@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.patches import Polygon
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from colors import HPHMI
 
 X_AXIS_OFFSET = 0.08
 Y_AXIS_OFFSET = 0.121
@@ -22,35 +23,35 @@ class DynamicBar:
 
     def _setup_view(self):
         self.ax.axis('off')
-        self.fig.patch.set_facecolor('#D5D5D5')  # Set figure background color
+        self.fig.patch.set_facecolor(HPHMI.gray)  # Set figure background color
 
         # Place the first static text at the top left with bold weight and color #4A4A4A
         self.ax.text(-0.13, 1.11, "Voltage Control", ha='left', va='top', fontsize=11, weight='bold', color='#4A4A4A', transform=self.ax.transAxes)
 
         # Place the second static text at the top left with color #4A4A4A
-        self.ax.text(-0.13, 1.02, "Set point", ha='left', va='top', fontsize=11, color='#4A4A4A', transform=self.ax.transAxes)
+        self.ax.text(-0.13, 1.02, "Set point", ha='left', va='top', fontsize=11, color=HPHMI.darker_gray, transform=self.ax.transAxes)
 
         # Create the outline bar for voltage
         rect = [X_AXIS_OFFSET, Y_AXIS_OFFSET, BAR_WIDTH, BAR_HEIGHT]
         self.voltage_outline = Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
-                                         facecolor='#999999', edgecolor='#4A4A4A', linewidth=1, clip_on=False)
+                                         facecolor=HPHMI.dark_gray, edgecolor=HPHMI.darker_gray, linewidth=1, clip_on=False)
         self.fig.patches.extend([self.voltage_outline])
 
         # Create a dynamic inner bar
         self.dynamic_bar = Rectangle((X_AXIS_OFFSET + 0.0024, Y_AXIS_OFFSET), BAR_WIDTH - 0.003, 0, transform=self.fig.transFigure, 
-                                     facecolor='#BBE0E3', edgecolor='#4A4A4A', linewidth=0.3, clip_on=False)
+                                     facecolor=HPHMI.light_blue, edgecolor=HPHMI.darker_gray, linewidth=0.3, clip_on=False)
         self.fig.patches.extend([self.dynamic_bar])
 
         # Create a square indicator rotated by 45 degrees (appearing as a diamond) inside the bar
         self.square_size = 0.0315
         self.square_indicator = Rectangle((X_AXIS_OFFSET + 0.022, Y_AXIS_CENTER), 
                                           self.square_size, self.square_size, angle=45, transform=self.fig.transFigure, 
-                                          facecolor='#4A4A4A', edgecolor='none', clip_on=False)
+                                          facecolor=HPHMI.darker_gray, edgecolor='none', clip_on=False)
         self.fig.patches.extend([self.square_indicator])
 
         # Create a triangle indicator using a Polygon
         triangle_base_size = 0.08
-        triangle_height = 0.09  # Calculated using Pythagoras theorem for equilateral triangle
+        triangle_height = 0.09
 
         triangle_x = X_AXIS_OFFSET + 0.022
         triangle_y = Y_AXIS_CENTER + 0.34
@@ -60,17 +61,17 @@ class DynamicBar:
                             (triangle_x + triangle_base_size/2, triangle_y + triangle_height)]
 
         self.warning_triangle = Polygon(triangle_vertices, transform=self.fig.transFigure, 
-                                        visible=False, facecolor='#FF0000', edgecolor='#000000', linewidth=1.5, clip_on=False)
+                                        visible=False, facecolor=HPHMI.red, edgecolor=HPHMI.black, linewidth=1.5, clip_on=False)
         self.fig.patches.extend([self.warning_triangle])
 
         # Add an outline box around the entire figure
         outline_box = Rectangle((0, 0), 1, 1, transform=self.fig.transFigure, 
-                                facecolor='none', edgecolor='#999999', linewidth=2, clip_on=False)
+                                facecolor='none', edgecolor=HPHMI.dark_gray, linewidth=2, clip_on=False)
         self.fig.patches.extend([outline_box])
 
         # Initialize dynamic number below the outline bar with a placeholder
         self.dynamic_number = self.ax.text(X_AXIS_OFFSET + BAR_WIDTH/2, Y_AXIS_OFFSET - 0.0275, '0', 
-                                   ha='center', va='top', fontsize=10, color='#0000D7', 
+                                   ha='center', va='top', fontsize=10, color=HPHMI.dark_blue, 
                                    transform=self.fig.transFigure, weight='bold')
 
 

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from colors import HPHMI
 
 VIEW_RANGES = {
     'default': {'limits': (200, 260), 'labels': (201, 258), 'y_pos_label': 216},
@@ -47,10 +48,10 @@ class GraphView:
     def setup_view(self, master):
         """Setup the Matplotlib figure and axis."""
         # Set the figure background color
-        self.fig.patch.set_facecolor('#D5D5D5')
+        self.fig.patch.set_facecolor(HPHMI.gray)
 
         # Set the axis background color
-        self.ax.set_facecolor('#D5D5D5')
+        self.ax.set_facecolor(HPHMI.gray)
         
         # Set consistent intervals for the X and Y axes
         self.ax.set_xlim(0, 60)  # Fixed at 60 seconds
@@ -62,12 +63,12 @@ class GraphView:
         self.ax.set_xticks([0, 15, 30, 45, 60])
         self.ax.set_xticklabels(['-60','-45', '-30', '-15', '60s'])
         xticks = self.ax.get_xticklabels()
-        xticks[-1].set_color('#008000')
+        xticks[-1].set_color(HPHMI.dark_green)
         xticks[-1].set_weight('bold')
         
         # Input voltage label
         self.ax.set_ylabel("0\nVoltage\nIn (V)", rotation=0, labelpad=20, va='center', 
-                    bbox=dict(facecolor='none', edgecolor='#0000D7', boxstyle='square', linewidth=2))
+                    bbox=dict(facecolor='none', edgecolor=HPHMI.dark_blue, boxstyle='square', linewidth=2))
         
         # Output voltage label
         voltage_out_label_text = f"0\nVoltage\nOut (V)"
@@ -75,7 +76,7 @@ class GraphView:
         y_position = VIEW_RANGES[self.view_type]['y_pos_label']
         self.ax.text(x_position, y_position, voltage_out_label_text, 
             rotation=0, ha='center', va='center',
-            bbox=dict(facecolor='none', edgecolor='#CC6600', boxstyle='square', linewidth=2))
+            bbox=dict(facecolor='none', edgecolor=HPHMI.brown, boxstyle='square', linewidth=2))
 
         self.ax.set_yticklabels([])
 
@@ -85,25 +86,25 @@ class GraphView:
         y_label_max = self.ax.text(-1.5, label_max, str(y_max), ha='right', va='center')
 
         # Format the y-labels
-        y_label_min.set_color('#008000')
+        y_label_min.set_color(HPHMI.dark_green)
         y_label_min.set_weight('bold')
-        y_label_max.set_color('#008000')
+        y_label_max.set_color(HPHMI.dark_green)
         y_label_max.set_weight('bold')
 
         # Outline bar for in_voltage
-        voltage_in_outline = self.create_rectangle(0.9439, 0.121, 0.015, 0.832, '#D5D5D5', '#999999', 1)
+        voltage_in_outline = self.create_rectangle(0.9439, 0.121, 0.015, 0.832, HPHMI.gray, HPHMI.dark_gray, 1)
         self.fig.patches.extend([voltage_in_outline])
 
         # Outline bar for out_voltage
-        voltage_out_outline = self.create_rectangle(0.96, 0.121, 0.015, 0.832, '#D5D5D5', '#999999', 1)
+        voltage_out_outline = self.create_rectangle(0.96, 0.121, 0.015, 0.832, HPHMI.gray, HPHMI.dark_gray, 1)
         self.fig.patches.extend([voltage_out_outline])
 
         self.fig.patches.extend([voltage_in_outline, voltage_out_outline])
 
-        plt.setp(self.ax.spines.values(), color='#999999')
+        plt.setp(self.ax.spines.values(), color=HPHMI.dark_gray)
 
         # Use faint grid lines
-        self.ax.grid(color='#999999', linestyle='--', linewidth=0.5, alpha=1)
+        self.ax.grid(color=HPHMI.dark_gray, linestyle='--', linewidth=0.5, alpha=1)
 
         # Embed the Matplotlib figure into the Tkinter window
         self.canvas = FigureCanvasTkAgg(self.fig, master=master)
@@ -112,7 +113,7 @@ class GraphView:
 
         # Add an outline box around the entire figure
         outline_box = Rectangle((0, 0), 1, 1, transform=self.fig.transFigure, 
-                                facecolor='none', edgecolor='#999999', linewidth=2, clip_on=False)
+                                facecolor='none', edgecolor=HPHMI.dark_gray, linewidth=2, clip_on=False)
         self.fig.patches.extend([outline_box])
 
         self.fig.tight_layout()
@@ -186,13 +187,13 @@ class GraphView:
         self.ax.cla()
         
         # Plot the data
-        self.ax.plot(self.data_in, "-o", color='#0000D7', markersize=1)
-        self.ax.plot(self.data_out, "-o", color='#CC6600', markersize=1)
+        self.ax.plot(self.data_in, "-o", color=HPHMI.dark_blue, markersize=1)
+        self.ax.plot(self.data_out, "-o", color=HPHMI.brown, markersize=1)
 
         # Label the axes
         voltage_in_label_text = f"{round(avg_in_value, 1)}\nVoltage\nIn (V)"
         self.ax.set_ylabel(voltage_in_label_text, rotation=0, labelpad=20, va='center', 
-                    bbox=dict(facecolor='none', edgecolor='#0000D7', boxstyle='square', linewidth=2))
+                    bbox=dict(facecolor='none', edgecolor=HPHMI.dark_blue, boxstyle='square', linewidth=2))
 
         # Output voltage label
         voltage_out_label_text = f"{voltage_out}\nVoltage\nOut (V)"
@@ -200,7 +201,7 @@ class GraphView:
         y_position = VIEW_RANGES[self.view_type]['y_pos_label']
         self.ax.text(x_position, y_position, voltage_out_label_text, 
             rotation=0, ha='center', va='center',
-            bbox=dict(facecolor='none', edgecolor='#CC6600', boxstyle='square', linewidth=2))
+            bbox=dict(facecolor='none', edgecolor=HPHMI.brown, boxstyle='square', linewidth=2))
 
         self.ax.set_yticklabels([])
 
@@ -210,9 +211,9 @@ class GraphView:
         y_label_max = self.ax.text(-1.5, label_max, str(y_axis_max), ha='right', va='center')
 
         # Format the y-labels
-        y_label_min.set_color('#008000')
+        y_label_min.set_color(HPHMI.dark_green)
         y_label_min.set_weight('bold')
-        y_label_max.set_color('#008000')
+        y_label_max.set_color(HPHMI.dark_green)
         y_label_max.set_weight('bold')
 
         # Set x-ticks to represent elapsed time
@@ -221,30 +222,30 @@ class GraphView:
 
         # Set rightmost x-tick to describe the x-axis
         xticks = self.ax.get_xticklabels()
-        xticks[-1].set_color('#008000')
+        xticks[-1].set_color(HPHMI.dark_green)
         xticks[-1].set_weight('bold')
 
         # Outline bar for in_voltage
-        voltage_in_outline = self.create_rectangle(0.9439, 0.121, 0.015, 0.832, '#D5D5D5', '#999999', 1)
+        voltage_in_outline = self.create_rectangle(0.9439, 0.121, 0.015, 0.832, HPHMI.gray, HPHMI.dark_gray, 1)
         self.fig.patches.extend([voltage_in_outline])
 
         # Inner bar representing the input voltage data range
-        voltage_in_bar = self.create_rectangle(0.9439, rect_y_in, 0.015, rect_height_in * 0.832, '#0000D7', 'none', 0.5)
+        voltage_in_bar = self.create_rectangle(0.9439, rect_y_in, 0.015, rect_height_in * 0.832, HPHMI.dark_blue, 'none', 0.5)
         self.fig.patches.extend([voltage_in_bar])
 
         # Outline bar for out_voltage
-        voltage_out_outline = self.create_rectangle(0.96, 0.121, 0.015, 0.832, '#D5D5D5', '#999999', 1)
+        voltage_out_outline = self.create_rectangle(0.96, 0.121, 0.015, 0.832, HPHMI.gray, HPHMI.dark_gray, 1)
 
         # Inner bar representing the output voltage data range
-        voltage_out_bar = self.create_rectangle(0.96, rect_y_out, 0.015, rect_height_out * 0.832, '#CC6600', 'none', 0.5)
+        voltage_out_bar = self.create_rectangle(0.96, rect_y_out, 0.015, rect_height_out * 0.832, HPHMI.brown, 'none', 0.5)
         self.fig.patches.extend([voltage_out_outline, voltage_out_bar])
 
-        plt.setp(self.ax.spines.values(), color='#999999')
+        plt.setp(self.ax.spines.values(), color=HPHMI.dark_gray)
 
         # Set the axes labels and grid
         self.ax.set_xlim(0, 60)  # Fixed at 60 seconds
         y_min, y_max = VIEW_RANGES[self.view_type]['limits']
         self.ax.set_ylim(y_min, y_max)  # Use dynamic voltage range from VIEW_RANGES
-        self.ax.grid(color='#999999', linestyle='--', linewidth=0.5, alpha=1)
+        self.ax.grid(color=HPHMI.dark_gray, linestyle='--', linewidth=0.5, alpha=1)
         self.fig.tight_layout()
         self.canvas.draw()

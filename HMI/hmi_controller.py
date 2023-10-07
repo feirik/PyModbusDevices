@@ -17,8 +17,12 @@ TIMEOUT = 5
 UNIT_ID = 1
 
 class HMIController:
-    def __init__(self, view):
+    def __init__(self, view, host, port, timeout, unit_id):
         self.view = view
+        self.host = host
+        self.port = port
+        self.timeout = timeout
+        self.unit_id = unit_id
 
         # Initialize the Graph
         self.graph = GraphView(self.view)
@@ -51,37 +55,36 @@ class HMIController:
 
 
     def write_register(self, addr, value):
-        client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+        client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
         result = client.write_register(addr, value)
         client.close()
         return result
 
     def read_coil(self, addr):
-        client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+        client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
         current_value = client.read_coil(addr)
         client.close()
         return current_value
 
     def write_coil(self, addr, value):
-        client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+        client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
         result = client.write_coil(addr, value)
         client.close()
         return result
 
-    # Method to read the holding register
     def read_holding_register_periodically(self):
         # First, we cancel any previous scheduling to ensure that we don't have multiple calls scheduled
         if hasattr(self, '_after_id'):
             self.view.after_cancel(self._after_id)
-        
+
         try:
             # Read input voltage
-            client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+            client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
             in_voltage_value = client.read_holding_register(0)
             client.close()
 
             # Read output voltage
-            client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+            client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
             out_voltage_value = client.read_holding_register(1)
             client.close()
 
@@ -89,17 +92,17 @@ class HMIController:
             self.graph.update_graph(in_voltage_value, out_voltage_value)
 
             # Read set point
-            client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+            client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
             set_point = client.read_holding_register(2)
             client.close()
 
             # Read minimum set point limit
-            client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+            client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
             min_set_point = client.read_holding_register(3)
             client.close()
 
             # Read maximum set point limit
-            client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+            client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
             max_set_point = client.read_holding_register(4)
             client.close()
 
@@ -107,12 +110,12 @@ class HMIController:
             self.dynamic_bar.set_value(min_set_point, max_set_point, set_point)
 
             # Read enable output coil status
-            client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+            client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
             enable_output = client.read_coil(0)
             client.close()
 
             # Read enable override coil status
-            client = ModbusTCPClientAPI(IP_ADDRESS, SERVER_PORT, TIMEOUT, UNIT_ID)
+            client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
             enable_override = client.read_coil(1)
             client.close()
 
@@ -121,7 +124,7 @@ class HMIController:
 
             # Save the after_id to cancel it later upon closing
             self._after_id = self.view.after(1000, self.read_holding_register_periodically)
-            
+
         except Exception as e:
             print('Error:', e)
 

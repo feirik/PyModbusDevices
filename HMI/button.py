@@ -7,6 +7,46 @@ from matplotlib.widgets import Button
 from matplotlib.patches import Rectangle
 from colors import HPHMI
 
+# Dialog dimensions and position
+DIALOG_X_POSITION = 815
+DIALOG_Y_POSITION = 514
+DIALOG_WIDTH = 225
+DIALOG_HEIGHT = 106
+
+INPUT_LOW_LIMIT = 0
+INPUT_HIGH_LIMIT = 1024
+
+# Button, text and rectangle positions
+BTN_POS = {
+    'sp_btn': [0.075, 0.74, 0.314, 0.12],
+    'max_btn': [0.075, 0.575, 0.314, 0.12],
+    'min_btn': [0.075, 0.41, 0.314, 0.12],
+    'en_output_btn': [0.075, 0.245, 0.314, 0.12],
+    'en_override_btn': [0.075, 0.08, 0.314, 0.12],
+    'high_view_btn': [0.495, 0.295, 0.25, 0.07],
+    'def_view_btn': [0.495, 0.1875, 0.25, 0.07],
+    'low_view_btn': [0.495, 0.08, 0.25, 0.07],
+}
+
+RECT = {
+    'faceplate_zone': [0.465, 0.52, 0.51, 0.433],
+    'select_view': [0.465, 0.045, 0.31, 0.40],
+    'manual_actions': [0.028, 0.045, 0.41, 0.907],
+    'info_zone': [0.8, 0.045, 0.175, 0.40]
+}
+
+BTN_RECT_BORDER = {
+    'start': (0.033, 0.03),
+    'size': (0.94, 0.94),
+    'line_width': 1.5
+}
+
+TEXT_PLACEMENT = {
+    'select_view': (0, 0.405),
+    'manual_actions': (0, 0.91),
+    'info_zone': (0, -0.02)  # Relative to the center_y
+}
+
 class ButtonView:
     def __init__(self, master, controller):
         self.controller = controller
@@ -31,97 +71,102 @@ class ButtonView:
 
     def _setup_view(self):
         # Set point button
-        self.sp_button_ax = self.fig.add_axes([0.075, 0.74, 0.314, 0.12])
-        
+        self.sp_button_ax = self.fig.add_axes(BTN_POS['sp_btn'])
+
         # Create the button with hover effect
         self.sp_button = Button(self.sp_button_ax, 'SET\nSET POINT', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.sp_button.on_clicked(partial(self._on_button_click_set_value, title="Update Set Point", prompt="Enter value (0-1024):", addr=2))
 
-        # Give it a thick border (You can adjust the rectangle's linewidth for the desired thickness)
         # Here, the rectangle is slightly smaller than the full button
-        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
+        rectangle = plt.Rectangle(BTN_RECT_BORDER['start'], *BTN_RECT_BORDER['size'], 
+                                facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=BTN_RECT_BORDER['line_width'])
         self.sp_button_ax.add_patch(rectangle)
 
         # Max limit button
-        self.max_button_ax = self.fig.add_axes([0.075, 0.575, 0.314, 0.12])
-        
+        self.max_button_ax = self.fig.add_axes(BTN_POS['max_btn'])
+
         # Create the button with hover effect
         self.max_button = Button(self.max_button_ax, 'SET\nMAX LIMIT', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.max_button.on_clicked(partial(self._on_button_click_set_value, title="Set Max Limit", prompt="Enter value (0-1024):", addr=4))
 
-        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
+        rectangle = plt.Rectangle(BTN_RECT_BORDER['start'], *BTN_RECT_BORDER['size'], 
+                                facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=BTN_RECT_BORDER['line_width'])
         self.max_button_ax.add_patch(rectangle)
 
         # Min limit button
-        self.min_button_ax = self.fig.add_axes([0.075, 0.41, 0.314, 0.12])
+        self.min_button_ax = self.fig.add_axes(BTN_POS['min_btn'])
 
         # Create the button with hover effect
         self.min_button = Button(self.min_button_ax, 'SET\nMIN LIMIT', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.min_button.on_clicked(partial(self._on_button_click_set_value, title="Set Min Limit", prompt="Enter value (0-1024):", addr=3))
 
-        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
+        # Add the rectangle
+        rectangle = plt.Rectangle(BTN_RECT_BORDER['start'], *BTN_RECT_BORDER['size'], 
+                                facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=BTN_RECT_BORDER['line_width'])
         self.min_button_ax.add_patch(rectangle)
 
         # Enable output toggle button
-        self.en_output_button_ax = self.fig.add_axes([0.075, 0.245, 0.314, 0.12])
+        self.en_output_button_ax = self.fig.add_axes(BTN_POS['en_output_btn'])
 
         # Create the button with hover effect
         self.en_output_button = Button(self.en_output_button_ax, 'TOGGLE\nENABLE OUTPUT', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
-        self.en_output_button.on_clicked(partial(self._on_toggle_button_click, title="Change Enable Output", prompt="Enable output will be toggeled.", addr=0))
+        self.en_output_button.on_clicked(partial(self._on_toggle_button_click, title="Change Enable Output", prompt="Enable output will be toggled.", addr=0))
 
-        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
+        # Add the rectangle
+        rectangle = plt.Rectangle(BTN_RECT_BORDER['start'], *BTN_RECT_BORDER['size'], 
+                                facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=BTN_RECT_BORDER['line_width'])
         self.en_output_button_ax.add_patch(rectangle)
 
         # Enable override toggle button
-        self.en_override_button_ax = self.fig.add_axes([0.075, 0.08, 0.314, 0.12])
+        self.en_override_button_ax = self.fig.add_axes(BTN_POS['en_override_btn'])
 
         # Create the button with hover effect
         self.en_override_button = Button(self.en_override_button_ax, 'TOGGLE\nENBL OVERRIDE', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
-        self.en_override_button.on_clicked(partial(self._on_toggle_button_click, title="Change Enable Override", prompt="Enable override will be toggeled.", addr=1))
+        self.en_override_button.on_clicked(partial(self._on_toggle_button_click, title="Change Enable Override", prompt="Enable override will be toggled.", addr=1))
 
-        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
+        # Add the rectangle
+        rectangle = plt.Rectangle(BTN_RECT_BORDER['start'], *BTN_RECT_BORDER['size'], 
+                                facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=BTN_RECT_BORDER['line_width'])
         self.en_override_button_ax.add_patch(rectangle)
 
         # View 0-400V button
-        self.high_view_button_ax = self.fig.add_axes([0.495, 0.295, 0.25, 0.07])
+        self.high_view_button_ax = self.fig.add_axes(BTN_POS['high_view_btn'])
 
         # Create the button with hover effect
         self.high_view_button = Button(self.high_view_button_ax, '0-400V', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.high_view_button.on_clicked(self.controller.set_high_view)
 
-        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
+        # Add the rectangle
+        rectangle = plt.Rectangle(BTN_RECT_BORDER['start'], *BTN_RECT_BORDER['size'], 
+                                facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=BTN_RECT_BORDER['line_width'])
         self.high_view_button_ax.add_patch(rectangle)
 
         # View 200-260V button
-        self.def_view_button_ax = self.fig.add_axes([0.495, 0.1875, 0.25, 0.07])
+        self.def_view_button_ax = self.fig.add_axes(BTN_POS['def_view_btn'])
 
         # Create the button with hover effect
         self.def_view_button = Button(self.def_view_button_ax, '200-260V', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.def_view_button.on_clicked(self.controller.set_default_view)
 
-        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
+        # Add the rectangle
+        rectangle = plt.Rectangle(BTN_RECT_BORDER['start'], *BTN_RECT_BORDER['size'], 
+                                facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=BTN_RECT_BORDER['line_width'])
         self.def_view_button_ax.add_patch(rectangle)
 
         # View 100-140V button
-        self.low_view_button_ax = self.fig.add_axes([0.495, 0.08, 0.25, 0.07])
+        self.low_view_button_ax = self.fig.add_axes(BTN_POS['low_view_btn'])
 
         # Create the button with hover effect
         self.low_view_button = Button(self.low_view_button_ax, '100-140V', color=HPHMI.dark_gray, hovercolor=HPHMI.dark_green)
         self.low_view_button.on_clicked(self.controller.set_low_view)
 
-        rectangle = plt.Rectangle((0.033, 0.03), 0.94, 0.94, 
-                                  facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1.5)
+        # Add the rectangle
+        rectangle = plt.Rectangle(BTN_RECT_BORDER['start'], *BTN_RECT_BORDER['size'], 
+                                facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=BTN_RECT_BORDER['line_width'])
         self.low_view_button_ax.add_patch(rectangle)
 
         # Create faceplate zone
-        rect = [0.465, 0.52, 0.51, 0.433]
+        rect = RECT['faceplate_zone']
 
         # Add the rectangle to the axis instead of the figure
         self.description_box = self.ax.add_patch(
@@ -135,44 +180,28 @@ class ButtonView:
 
         # Add text to the rectangle
         self.desc_text = self.ax.text(center_x, center_y, "Reserved Faceplate Zone\n", weight='bold', ha='center',
-                         va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
+                        va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
 
         # Create select view rectangle
-        rect = [0.465, 0.045, 0.31, 0.40]
+        rect = RECT['select_view']
 
         # Add the rectangle to the axis instead of the figure
         self.description_box = self.ax.add_patch(
             Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
                     facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1, clip_on=False)
         )
-
-        # Calculate the center of the rectangle
-        center_x = rect[0] + rect[2] / 2
-        y_placement = 0.405
-
-        # Add text to the rectangle
-        self.desc_text = self.ax.text(center_x, y_placement, "SELECT VIEW", weight='bold', ha='center',
-                         va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
 
         # Create manual actions zone
-        rect = [0.028, 0.045, 0.41, 0.907]
+        rect = RECT['manual_actions']
 
         # Add the rectangle to the axis instead of the figure
         self.description_box = self.ax.add_patch(
             Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
                     facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1, clip_on=False)
         )
-
-        # Calculate the center of the rectangle
-        center_x = rect[0] + rect[2] / 2
-        y_placement = 0.91
-
-        # Add text to the rectangle
-        self.desc_text = self.ax.text(center_x, y_placement, "MANUAL ACTIONS", weight='bold', ha='center',
-                         va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
 
         # Create info rectangle
-        rect = [0.8, 0.045, 0.175, 0.40]
+        rect = RECT['info_zone']
 
         # Add the rectangle to the axis instead of the figure
         self.description_box = self.ax.add_patch(
@@ -180,14 +209,29 @@ class ButtonView:
                     facecolor=HPHMI.gray, edgecolor=HPHMI.dark_gray, linewidth=1, clip_on=False)
         )
 
-        # Calculate the center of the rectangle
+        # For 'SELECT VIEW'
+        rect = RECT['select_view']
         center_x = rect[0] + rect[2] / 2
-        center_y = rect[1] + rect[3] / 2 - 0.02
+        y_placement = TEXT_PLACEMENT['select_view'][1]
 
-        # Add text to the rectangle
+        self.desc_text = self.ax.text(center_x, y_placement, "SELECT VIEW", weight='bold', ha='center',
+                        va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
+
+        # For 'MANUAL ACTIONS'
+        rect = RECT['manual_actions']
+        center_x = rect[0] + rect[2] / 2
+        y_placement = TEXT_PLACEMENT['manual_actions'][1]
+
+        self.desc_text = self.ax.text(center_x, y_placement, "MANUAL ACTIONS", weight='bold', ha='center',
+                        va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
+
+        # For 'Static Info Zone'
+        rect = RECT['info_zone']
+        center_x = rect[0] + rect[2] / 2
+        center_y = rect[1] + rect[3] / 2 + TEXT_PLACEMENT['info_zone'][1]
+
         self.desc_text = self.ax.text(center_x, center_y, "Static\nInfo\nZone", weight='bold', ha='center',
-                         va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
-
+                        va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
 
 
     def _on_button_click_set_value(self, event, title, prompt, addr):
@@ -199,7 +243,7 @@ class ButtonView:
         if user_input is not None:
             try:
                 user_input = int(user_input)
-                if 0 <= user_input <= 1024:
+                if INPUT_LOW_LIMIT <= user_input <= INPUT_HIGH_LIMIT:
                     # Check the result of the write operation
                     success = self.controller.write_register(addr, user_input)
                     if not success:
@@ -228,13 +272,8 @@ class ButtonView:
 
 
     def input_dialog(self, title, prompt):
-        x = 815
-        y = 514
-        width = 225
-        height = 106
-
         self.dialog_window = tk.Toplevel(self.canvas._tkcanvas.master)
-        self.dialog_window.geometry(f"{width}x{height}+{x}+{y}")
+        self.dialog_window.geometry(f"{DIALOG_WIDTH}x{DIALOG_HEIGHT}+{DIALOG_X_POSITION}+{DIALOG_Y_POSITION}")
         self.dialog_window.title(title)
 
         # Set the column weights. The center columns (1 and 2) have higher weights.
@@ -260,13 +299,8 @@ class ButtonView:
 
 
     def toggle_dialog(self, title, prompt):
-        x = 815
-        y = 514
-        width = 225
-        height = 106
-
         self.dialog_window = tk.Toplevel(self.canvas._tkcanvas.master)
-        self.dialog_window.geometry(f"{width}x{height}+{x}+{y}")
+        self.dialog_window.geometry(f"{DIALOG_WIDTH}x{DIALOG_HEIGHT}+{DIALOG_X_POSITION}+{DIALOG_Y_POSITION}")
         self.dialog_window.title(title)
 
         # Set the column weights. The center columns (1 and 2) have higher weights.
@@ -292,9 +326,11 @@ class ButtonView:
         self.result = self.entry.get()
         self.dialog_window.destroy()
 
+
     def cancel_window(self):
         self.result = None
         self.dialog_window.destroy()
+
 
     def confirm_toggle(self):
         self.result = True
@@ -302,13 +338,8 @@ class ButtonView:
 
 
     def error_dialog(self, message):
-        x = 815
-        y = 514
-        width = 225
-        height = 106
-
         error_window = tk.Toplevel(self.canvas._tkcanvas.master)
-        error_window.geometry(f"{width}x{height}+{x}+{y}")
+        error_window.geometry(f"{DIALOG_WIDTH}x{DIALOG_HEIGHT}+{DIALOG_X_POSITION}+{DIALOG_Y_POSITION}")
         error_window.title("ERROR")
 
         label = tk.Label(error_window, text=message)
@@ -316,6 +347,7 @@ class ButtonView:
 
         ok_button = tk.Button(error_window, text="OK", command=error_window.destroy, width=12)
         ok_button.pack(pady=10)
+
 
     def close_window(self):
         self.result = None

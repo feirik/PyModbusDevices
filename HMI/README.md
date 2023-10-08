@@ -1,6 +1,6 @@
 # HMI for Modbus TCP Operations
 
-These files are meant to be used with the ModbusTCP server in `../Server/modbus_voltage_regulator.py`. The interface allows users to set parameters, toggle options, and view real-time statuses using an interface based on high performance HMI principles.
+These files are meant to be used with the ModbusTCP server in `../Server/modbus_voltage_regulator.py`. The interface allows users to set parameters, toggle options, and view real-time statuses using an interface based on high performance HMI concepts.
 
 ## Usage
 
@@ -19,7 +19,7 @@ For advanced usage, the HMI script `main.py` accepts several command line argume
 
 Example usage with command line arguments:
 ```shell
-python3 main.py --host 192.168.1.100 -p 502 -u 2 -t 10
+python3 main.py --host 192.168.1.100 -p 502 -u 1 -t 10
 ```
 
 ## HMI Interface

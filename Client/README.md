@@ -1,6 +1,6 @@
 # Modbus TCP Client Command Line in Python
 
-This project presents a Python implementation of a the Perl script [mbtget](https://github.com/sourceperl/mbtget) with a command-line interface. This script connects to a Modbus server and performs various read and write operations based on user input.
+This project presents a Python implementation of a the Perl script [mbtget](https://github.com/sourceperl/mbtget) with a command-line interface. This script connects to a Modbus TCP server and performs various read and write operations based on user input.
 
 ## Command Line Arguments
 
@@ -58,9 +58,47 @@ python3 -m unittest unit_tests.py
 
 ## Testing the API
 
-Test the API by running the commands below from the PyModbusDevices folder.
+Test the API by running the commands below from the **PyModbusDevices** folder (The folder above this).
 
 ```shell
 python3 Server/modbus_voltage_regulator.py&
 python3 -m Client.api_pymbtget
 ```
+
+## API Documentation
+
+The `api_pymbtget.py` file provides a `ModbusTCPClientAPI` class that wraps around the `ModbusTCPClient` object. It offers methods for various Modbus operations. The client directly using `pymbtget.py` and will open and close a TCP session for each read or write operation.
+
+### ModbusTCPClientAPI Class
+
+Initializes a `ModbusTCPClient` object, connects to the server, and sets the Modbus unit ID for subsequent operations.
+
+#### Parameters:
+- **ip_address** (str): The IP address of the Modbus server to connect to.
+- **port** (int): The port number the client will use to connect to the Modbus server.
+- **timeout** (int): The maximum amount of time (in seconds) to wait for a response from the server before giving up.
+- **unit_id** (int): The Modbus unit ID to be used by the client.
+
+#### Methods:
+
+- **read_coil(modbus_address: int) -> bool**:
+  Reads the state of a specific coil on the Modbus device. Returns the state of the coil read (True for ON, False for OFF).
+
+- **read_multiple_coils(modbus_address: int, number_of_values: int) -> List[bool]**:
+  Reads the state of specific coils on the Modbus device. Returns an array of boolean values representing the state of each coil read.
+
+- **read_holding_register(modbus_address: int) -> int**:
+  Reads the content of a specific holding register on the Modbus device. Returns the value of the holding register read.
+
+- **read_multiple_holding_registers(modbus_address: int, number_of_values: int) -> List[int]**:
+  Reads the content of specific holding registers on the Modbus device. Returns an array of integer values representing the content of each holding register read.
+
+- **write_coil(modbus_address: int, bit_value: bool) -> bool**:
+  Writes a binary value to a specific coil on the Modbus device. Returns a boolean indicating whether the write operation was successful.
+
+- **write_register(modbus_address: int, word_value: int) -> bool**:
+  Writes an integer value to a specific holding register on the Modbus device. Returns a boolean indicating whether the write operation was successful.
+
+- **close()**:
+  Closes the client connection.
+

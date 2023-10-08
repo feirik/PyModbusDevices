@@ -22,15 +22,6 @@ Example usage with command line arguments:
 python3 main.py --host 192.168.1.100 -p 502 -u 1 -t 10
 ```
 
-## HMI Interface
-
-The HMI components:
-
-- **Trend Graphs**: See historical values of the input and output voltage for the voltage regulator
-- **Control Buttons**: For performing actions such as setting the set point, max limit, min limit, enabling output, and enabling overrides.
-- **View Selection**: Options to switch between different voltage views.
-- **Status Indicators**: Displays the status of the Modbus operations, enabling users to understand the current configuration and system state at a glance.
-  
 ## Dependencies
 
 - `matplotlib`: This library facilitates the creation of the graphical components and visualization for the interface.
@@ -39,6 +30,17 @@ Install with:
 ```shell
 pip install -r requirements.txt
 ```
+
+## HMI Interface
+
+The HMI components:
+
+- **Trend Graphs**: See historical values of the input and output voltage for the voltage regulator
+- **Control Buttons**: For performing actions such as setting the set point, max limit, min limit, enabling output, and enabling overrides.
+- **View Selection**: Options to switch between different voltage views.
+- **Status Indicators**: Displays the status of the Modbus operations, enabling users to understand the current configuration and system state at a glance.
+
+![HMI Screenshot](./assets/ModbusTCP_HMI.PNG)
 
 ## GUI Details
 

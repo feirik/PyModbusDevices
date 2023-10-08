@@ -3,6 +3,16 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.patches import Rectangle
 from colors import HPHMI
 
+RECT = {
+    'control_status': [0.022, 0.885, 0.954, 0.07],
+    'enable_output_desc': [0.022, 0.815, 0.32, 0.07],
+    'enable_output_dynamic': [0.022, 0.745, 0.32, 0.07],
+    'enable_override_desc': [0.505, 0.815, 0.32, 0.07],
+    'enable_override_dynamic': [0.505, 0.745, 0.32, 0.07],
+    'filler_box_right': [0.825, 0.745, 0.151, 0.14],
+    'filler_box_left': [0.342, 0.745, 0.163, 0.14]
+}
+
 class Indicator:
     def __init__(self, master):
         """Initialize the Matplotlib figure and axis."""
@@ -28,7 +38,7 @@ class Indicator:
         self.ax.axis('off')
 
         # Create a description box
-        rect = [0.022, 0.885, 0.954, 0.07]
+        rect = RECT['control_status']
 
         # Add the rectangle to the axis instead of the figure
         self.description_box = self.ax.add_patch(
@@ -45,7 +55,7 @@ class Indicator:
                          va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
 
         # Create a enable output description box
-        rect = [0.022, 0.815, 0.32, 0.07]
+        rect = RECT['enable_output_desc']
 
         self.description_box = self.ax.add_patch(
             Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
@@ -60,7 +70,7 @@ class Indicator:
 
 
         # Create a enable output dynamic box
-        rect = [0.022, 0.745, 0.32, 0.07]
+        rect = RECT['enable_output_dynamic']
 
         self.en_output_box = self.ax.add_patch(
             Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
@@ -75,7 +85,7 @@ class Indicator:
 
 
         # Create a enable override description box
-        rect = [0.505, 0.815, 0.32, 0.07]
+        rect = RECT['enable_override_desc']
 
         self.description_box = self.ax.add_patch(
             Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
@@ -90,7 +100,7 @@ class Indicator:
 
 
         # Create a enable override dynamic box
-        rect = [0.505, 0.745, 0.32, 0.07]
+        rect = RECT['enable_override_dynamic']
 
         self.en_ovverride_box = self.ax.add_patch(
             Rectangle((rect[0], rect[1]), rect[2], rect[3], transform=self.fig.transFigure, 
@@ -104,8 +114,8 @@ class Indicator:
                          va='center', fontsize=10, color=HPHMI.darker_gray, transform=self.fig.transFigure)
 
 
-        # Create filler box
-        rect = [0.825, 0.745, 0.151, 0.14]
+        # Create filler box right
+        rect = RECT['filler_box_right']
 
         # Add the rectangle to the axis instead of the figure
         self.description_box = self.ax.add_patch(
@@ -113,8 +123,8 @@ class Indicator:
                     facecolor=HPHMI.gray, edgecolor=HPHMI.darker_gray, linewidth=0.5, clip_on=False)
         )
 
-        # Create filler box
-        rect = [0.342, 0.745, 0.163, 0.14]
+        # Create filler box left
+        rect = RECT['filler_box_left']
 
         # Add the rectangle to the axis instead of the figure
         self.description_box = self.ax.add_patch(

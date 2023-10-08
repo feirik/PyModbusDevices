@@ -9,6 +9,26 @@ VIEW_RANGES = {
     'high': {'limits': (0, 400), 'labels': (8, 390), 'y_pos_label': 110},
 }
 
+BAR_OUTLINES = {
+    'in_voltage': {
+        'x': 0.9439,
+        'y': 0.121,
+        'width': 0.015,
+        'height': 0.832
+    },
+    'out_voltage': {
+        'x': 0.96,
+        'y': 0.121,
+        'width': 0.015,
+        'height': 0.832
+    }
+}
+
+# Constantts for dynamic bars
+BASE_Y = 0.121
+BAR_SCALE = 0.832
+UPPER_BOUNDARY = 0.953
+
 class GraphView:
     def __init__(self, master):
         """Initialize the Matplotlib figure and axis."""
@@ -78,6 +98,7 @@ class GraphView:
             rotation=0, ha='center', va='center',
             bbox=dict(facecolor='none', edgecolor=HPHMI.brown, boxstyle='square', linewidth=2))
 
+        # Hide y-axis tick lables
         self.ax.set_yticklabels([])
 
         # Manually add the y-labels at desired positions
@@ -92,12 +113,19 @@ class GraphView:
         y_label_max.set_weight('bold')
 
         # Outline bar for in_voltage
-        voltage_in_outline = self.create_rectangle(0.9439, 0.121, 0.015, 0.832, HPHMI.gray, HPHMI.dark_gray, 1)
-        self.fig.patches.extend([voltage_in_outline])
+        voltage_in_outline = self.create_rectangle(BAR_OUTLINES['in_voltage']['x'], 
+                                                   BAR_OUTLINES['in_voltage']['y'], 
+                                                   BAR_OUTLINES['in_voltage']['width'], 
+                                                   BAR_OUTLINES['in_voltage']['height'], 
+                                                   HPHMI.gray, HPHMI.dark_gray, 1)
 
+        
         # Outline bar for out_voltage
-        voltage_out_outline = self.create_rectangle(0.96, 0.121, 0.015, 0.832, HPHMI.gray, HPHMI.dark_gray, 1)
-        self.fig.patches.extend([voltage_out_outline])
+        voltage_out_outline = self.create_rectangle(BAR_OUTLINES['out_voltage']['x'], 
+                                                    BAR_OUTLINES['out_voltage']['y'], 
+                                                    BAR_OUTLINES['out_voltage']['width'], 
+                                                    BAR_OUTLINES['out_voltage']['height'], 
+                                                    HPHMI.gray, HPHMI.dark_gray, 1)
 
         self.fig.patches.extend([voltage_in_outline, voltage_out_outline])
 
@@ -158,29 +186,27 @@ class GraphView:
 
         # Use the normalized values to set the height and starting point of the colored rectangle
         rect_height_in = normalized_max_in - normalized_min_in
-        rect_y_in = 0.121 + normalized_min_in * 0.832  # Adjust starting point based on minimum value
+        rect_y_in = BASE_Y + normalized_min_in * BAR_SCALE
 
         rect_height_out = normalized_max_out - normalized_min_out
-        rect_y_out = 0.121 + normalized_min_out * 0.832  # Adjust starting point based on minimum value
+        rect_y_out = BASE_Y + normalized_min_out * BAR_SCALE
 
-        # For the in_voltage dynamic bar
-        # Ensure the base of the bar is not below the lower boundary
-        rect_y_in = max(0.121, rect_y_in)
+        # For the in_voltage dynamic bar, check bar is not below the lower boundary
+        rect_y_in = max(BASE_Y, rect_y_in)
 
         # If the top of the dynamic bar exceeds the upper boundary, adjust the height and base
-        if rect_y_in + rect_height_in * 0.832 > 0.953:
-            overflow = (rect_y_in + rect_height_in * 0.832) - 0.953
-            rect_height_in -= overflow / 0.832
+        if rect_y_in + rect_height_in * BAR_SCALE > UPPER_BOUNDARY:
+            overflow = (rect_y_in + rect_height_in * BAR_SCALE) - UPPER_BOUNDARY
+            rect_height_in -= overflow / BAR_SCALE
             rect_y_in += overflow
 
-        # For the out_voltage dynamic bar
-        # Ensure the base of the bar is not below the lower boundary
-        rect_y_out = max(0.121, rect_y_out)
+        # For the out_voltage dynamic bar, check bar is not below the lower boundary
+        rect_y_out = max(BASE_Y, rect_y_out)
 
         # If the top of the dynamic bar exceeds the upper boundary, adjust the height and base
-        if rect_y_out + rect_height_out * 0.832 > 0.953:
-            overflow = (rect_y_out + rect_height_out * 0.832) - 0.953
-            rect_height_out -= overflow / 0.832
+        if rect_y_out + rect_height_out * BAR_SCALE > UPPER_BOUNDARY:
+            overflow = (rect_y_out + rect_height_out * BAR_SCALE) - UPPER_BOUNDARY
+            rect_height_out -= overflow / BAR_SCALE
             rect_y_out += overflow
 
         # Update the Matplotlib plot
@@ -203,6 +229,7 @@ class GraphView:
             rotation=0, ha='center', va='center',
             bbox=dict(facecolor='none', edgecolor=HPHMI.brown, boxstyle='square', linewidth=2))
 
+        # Hide y-axis tick lables
         self.ax.set_yticklabels([])
 
         # Manually add the y-labels at desired positions
@@ -226,21 +253,34 @@ class GraphView:
         xticks[-1].set_weight('bold')
 
         # Outline bar for in_voltage
-        voltage_in_outline = self.create_rectangle(0.9439, 0.121, 0.015, 0.832, HPHMI.gray, HPHMI.dark_gray, 1)
-        self.fig.patches.extend([voltage_in_outline])
+        voltage_in_outline = self.create_rectangle(BAR_OUTLINES['in_voltage']['x'], 
+                                                BAR_OUTLINES['in_voltage']['y'], 
+                                                BAR_OUTLINES['in_voltage']['width'], 
+                                                BAR_OUTLINES['in_voltage']['height'], 
+                                                HPHMI.gray, HPHMI.dark_gray, 1)
 
         # Inner bar representing the input voltage data range
-        voltage_in_bar = self.create_rectangle(0.9439, rect_y_in, 0.015, rect_height_in * 0.832, HPHMI.dark_blue, 'none', 0.5)
-        self.fig.patches.extend([voltage_in_bar])
+        voltage_in_bar = self.create_rectangle(BAR_OUTLINES['in_voltage']['x'], 
+                                               rect_y_in, 
+                                               BAR_OUTLINES['in_voltage']['width'], 
+                                               rect_height_in * BAR_OUTLINES['in_voltage']['height'], 
+                                               HPHMI.dark_blue, 'none', 0.5)
 
         # Outline bar for out_voltage
-        voltage_out_outline = self.create_rectangle(0.96, 0.121, 0.015, 0.832, HPHMI.gray, HPHMI.dark_gray, 1)
+        voltage_out_outline = self.create_rectangle(BAR_OUTLINES['out_voltage']['x'], 
+                                                    BAR_OUTLINES['out_voltage']['y'], 
+                                                    BAR_OUTLINES['out_voltage']['width'], 
+                                                    BAR_OUTLINES['out_voltage']['height'], 
+                                                    HPHMI.gray, HPHMI.dark_gray, 1)
 
         # Inner bar representing the output voltage data range
-        voltage_out_bar = self.create_rectangle(0.96, rect_y_out, 0.015, rect_height_out * 0.832, HPHMI.brown, 'none', 0.5)
-        self.fig.patches.extend([voltage_out_outline, voltage_out_bar])
-
-        plt.setp(self.ax.spines.values(), color=HPHMI.dark_gray)
+        voltage_out_bar = self.create_rectangle(BAR_OUTLINES['out_voltage']['x'], 
+                                                rect_y_out, 
+                                                BAR_OUTLINES['out_voltage']['width'], 
+                                                rect_height_out * BAR_OUTLINES['out_voltage']['height'], 
+                                                HPHMI.brown, 'none', 0.5)
+        
+        self.fig.patches.extend([voltage_in_outline, voltage_in_bar, voltage_out_outline, voltage_out_bar])
 
         # Set the axes labels and grid
         self.ax.set_xlim(0, 60)  # Fixed at 60 seconds

@@ -30,12 +30,13 @@ BUTTON_VIEW_PAD_Y = 20
 BUTTON_VIEW_PAD_X = 20
 
 class HMIController:
-    def __init__(self, view, host, port, timeout, unit_id):
+    def __init__(self, view, host, port, timeout, unit_id, os):
         self.view = view
         self.host = host
         self.port = port
         self.timeout = timeout
         self.unit_id = unit_id
+        self.os = os
 
         # Initialize the Graph
         self.graph = GraphView(self.view)
@@ -54,7 +55,7 @@ class HMIController:
 
         self.indicator = Indicator(self.view)
 
-        self.button_view = ButtonView(self.view, self)
+        self.button_view = ButtonView(self.view, self, self.os)
         self.button_view.canvas_widget.grid(row=BUTTON_VIEW_ROW, 
                                             column=BUTTON_VIEW_COLUMN, 
                                             columnspan=BUTTON_VIEW_COLUMN_SPAN, 

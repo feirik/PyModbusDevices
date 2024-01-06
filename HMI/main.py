@@ -85,7 +85,8 @@ def main():
                         default=DEFAULT_PORT, help=f'set TCP port (default: {DEFAULT_PORT})')
     parser.add_argument('-t', '--timeout', metavar='timeout', type=check_timeout, 
                         default=DEFAULT_TIMEOUT, help=f'set timeout in seconds (default: {DEFAULT_TIMEOUT}s)')
-    
+    parser.add_argument('--os', default='', help='Specify the operating system (e.g., "PIOS" for Raspberry Pi OS)')
+
     args = parser.parse_args()
 
     # Instantiate a Tkinter root window
@@ -101,7 +102,7 @@ def main():
     view = HMIView(master=root)
     
     # Pass the parsed arguments to HMIController
-    controller = HMIController(view=view, host=args.host, port=args.port, timeout=args.timeout, unit_id=args.unit_id)
+    controller = HMIController(view=view, host=args.host, port=args.port, timeout=args.timeout, unit_id=args.unit_id, os=args.os)
 
     # Start the GUI event loop
     root.mainloop()

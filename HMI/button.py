@@ -8,7 +8,7 @@ from matplotlib.patches import Rectangle
 from colors import HPHMI
 
 # Dialog dimensions and position
-DIALOG_X_POSITION = 815
+DIALOG_X_POSITION = 818
 DIALOG_Y_POSITION = 514
 DIALOG_WIDTH = 225
 DIALOG_HEIGHT = 106
@@ -48,9 +48,17 @@ TEXT_PLACEMENT = {
 }
 
 class ButtonView:
-    def __init__(self, master, controller):
+    def __init__(self, master, controller, os):
         self.controller = controller
         self.fig, self.ax = plt.subplots(figsize=(4.4, 3.2))
+        self.os = os
+
+        # Update location of popup dialog for PIOS
+        global DIALOG_X_POSITION, DIALOG_Y_POSITION
+
+        if self.os == "PIOS":
+            DIALOG_X_POSITION = 775
+            DIALOG_Y_POSITION = 505
         
         # Hide the default axis
         self.ax.axis('off')

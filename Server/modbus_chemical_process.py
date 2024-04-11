@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
+# TODO - Set coils and registers to error if pressure builds up too high, if mixing tank overflows, if unmixed fluid is tapped to output flow
+
+# Manual client commands
 """ 
 python3 pymbtget.py -w5 1 -a 200 -p 11502
 python3 pymbtget.py -w5 1 -a 201 -p 11502
 python3 pymbtget.py -w5 1 -a 202 -p 11502
+python3 pymbtget.py -w5 1 -a 205 -p 11502
 
 python3 pymbtget.py -w6 100 -a 231 -p 11502
 python3 pymbtget.py -w6 100 -a 233 -p 11502
@@ -36,13 +40,13 @@ import time
 # Ad 234: INTERMEDIATE_SLURRY_LEVEL - Sum of powder and liquid in mixer tank
 # Ad 235: PROCESSED_PRODUCT_LEVEL - Sum of processed product in mixer tank
 # Ad 236: HEATER - Controllable heater for heating the mixer tank
-# Ad 237: MIX_TANK_PRESSURE
-# Ad 238: TANK_TEMP_LOWER
-# Ad 239: TANK_TEMP_UPPER
-# Ad 240: POWDER_MIXING_VOLUME
-# Ad 241: LIQUID_MIXING_VOLUME
-# Ad 242: PROD_FLOW
-# Ad 243: PROD_FLOW_EST_MINUTE
+# Ad 237: MIX_TANK_PRESSURE - Pressure in upper part of tank containing air (kPa)
+# Ad 238: TANK_TEMP_LOWER - Temperature in lower part of tank (celsius)
+# Ad 239: TANK_TEMP_UPPER - Temperature in upper part of tank (celsius)
+# Ad 240: POWDER_MIXING_VOLUME - Volume of powder component (liters)
+# Ad 241: LIQUID_MIXING_VOLUME - Volume of liquid component (liters)
+# Ad 242: PROD_FLOW - Current flow of finished product (l/s)
+# Ad 243: PROD_FLOW_EST_MINUTE - Estimated flow of finished product (l/min)
 
 
 # Define the Modbus function codes
@@ -56,7 +60,7 @@ WRITE_MULTIPLE_COILS = 15 # Not supported
 WRITE_MULTIPLE_REGISTERS = 16 # Not supported
 
 # Modbus constants
-DEFAULT_PORT = 11502
+DEFAULT_PORT = 11502 # Test port
 REGISTER_SIZE = 65536
 MAX_REQUEST_SIZE = 1024
 BYTE_SIZE = 8
@@ -144,8 +148,8 @@ class ModbusServer:
         self.outlet_valve_position = 0
 
         # Tank levels
-        self.powder_tank_level = 900
-        self.liquid_tank_level = 900
+        self.powder_tank_level = 900 # Start at 900l
+        self.liquid_tank_level = 900 # Start at 900l
         self.powder_mix_tank_level = 0
         self.liquid_mix_tank_level = 0
         self.processed_mix_tank_level = 0
@@ -220,31 +224,8 @@ class ModbusServer:
             self.update_tank_pressure()
             self.update_registers()
 
-            debug_message = (
-                f"Debug - Valve Positions | "
-                f"Powder Inlet: {self.powder_inlet}% | "
-                f"Powder Prop: {self.powder_inlet_prop}% | "
-                f"Liquid Inlet: {self.liquid_inlet}% | "
-                f"Liquid Prop: {self.liquid_inlet_prop}%"
-            )
-            #print(debug_message)
-
-            flow_debug_message = (
-                f"Debug - Flow Rates | "
-                f"Powder Flow: {self.powder_inlet_flow} l/s | "
-                f"Powder Tank Level: {self.holding_registers[POWDER_TANK_LEVEL_ADDR]} l | "
-                f"Powder Mixing Volume: {self.holding_registers[POWDER_MIXING_VOLUME_ADDR]} l | "
-                f"Liquid Flow: {self.liquid_inlet_flow} l/s | "
-                f"Liquid Tank Level: {self.holding_registers[LIQUID_TANK_LEVEL_ADDR]} l | "
-                f"Liquid Mixing Volume: {self.holding_registers[LIQUID_MIXING_VOLUME_ADDR]} l"
-            )
-            #print(flow_debug_message)
-
-            # Debugging
-            #if self.debug:
-                #print(f"Debug - Heater Setting: {self.holding_registers[HEATER_ADDR]}%, Target Temp: {target_temperature}°C, Upper Tank Temp: {self.holding_registers[TANK_TEMP_UPPER_ADDR]}°C, Lower Tank Temp: {self.holding_registers[TANK_TEMP_LOWER_ADDR]}°C")
-
             time.sleep(1)  # Simulate data update every second
+
 
     def auto_control(self):
         self.coils[POWDER_INLET_ADDR] = 1
@@ -280,8 +261,6 @@ class ModbusServer:
             self.coils[SAFETY_RELIEF_VALVE_ADDR] = 1
         else:
             self.coils[SAFETY_RELIEF_VALVE_ADDR] = 0
-
-        print("IN auto loop")
 
 
     def update_inlet_valve_positions(self):
@@ -332,12 +311,12 @@ class ModbusServer:
         self.powder_mix_tank_level += self.powder_inlet_flow
         self.liquid_mix_tank_level += self.liquid_inlet_flow
 
-        # Powder is manually filled below fill limit - Simulating manual filling process
+        # Powder level is manually filled below fill limit - Simulating manual filling process
         if self.powder_tank_level < POWDER_TANK_FILL_LIMIT:
             refill_powder = random.randint(400, 600)
             self.powder_tank_level += refill_powder
 
-        # Powder is kept around fill limit - Simulating automatic fill process from another part of plant
+        # Liquid level is kept around fill limit - Simulating automatic fill process from another part of plant
         if self.liquid_tank_level < LIQUID_TANK_FILL_LIMIT:
             self.liquid_tank_level = random.randint(LIQUID_TANK_FILL_LIMIT - 3, LIQUID_TANK_FILL_LIMIT)
 
@@ -350,7 +329,7 @@ class ModbusServer:
         # This will create a straight line between 0% (AMBIENT_TEMP) and 100% (MAX_HEATER_TEMP)
         target_temperature = heater_setting * (MAX_HEATER_TEMP - AMBIENT_TEMP) + AMBIENT_TEMP
 
-        # Get the temperatures from 10 seconds ago
+        # Get the temperatures from 10 seconds ago to introduce delay in regulation
         delayed_upper_temp = self.upper_temp_history.pop(0)  # Remove the oldest value
         delayed_lower_temp = self.lower_temp_history.pop(0)  # Remove the oldest value
 
@@ -417,17 +396,8 @@ class ModbusServer:
             # Ensure the mixing volumes don't drop below zero
             self.powder_mix_tank_level = max(self.powder_mix_tank_level, 0)
             self.liquid_mix_tank_level = max(self.liquid_mix_tank_level, 0)
-
-            # Debugging
-            if self.debug:
-                print(
-                    f"Debug - Chemical Processing | Mixer: {'On' if mixer_on else 'Off'}, "
-                    f"Temp: {current_temp}°C, Rate: {conversion_rate}, "
-                    f"Processed Powder: {processed_powder}, Processed Liquid: {processed_liquid}, "
-                    f"Product Level: {self.holding_registers[PROCESSED_PRODUCT_LEVEL_ADDR]}, "
-                    f"Pressure: {self.holding_registers[MIX_TANK_PRESSURE_ADDR]} kPa"
-                )
     
+
     def update_outlet_flow(self):
         # Update outlet valve position based on the coil status
         if self.coils[OUTLET_VALVE_ADDR] == 1 and self.outlet_valve_position < VALVE_MAX:
@@ -464,7 +434,7 @@ class ModbusServer:
     def get_average_outlet_flow_per_minute(self):
         # Return the average flow rate from the history
         if self.product_outlet_flow_history:
-            return sum(self.product_outlet_flow_history) / len(self.product_outlet_flow_history)
+            return (sum(self.product_outlet_flow_history) / len(self.product_outlet_flow_history)) * 60
         else:
             return 0
 
@@ -519,7 +489,7 @@ class ModbusServer:
         self.holding_registers[TANK_TEMP_UPPER_ADDR] = round(self.temperature_upper)
         self.holding_registers[TANK_TEMP_LOWER_ADDR] = round(self.temperature_lower)
         self.holding_registers[PROD_FLOW_ADDR] = int(self.product_outlet_flow)
-        self.holding_registers[PROD_FLOW_EST_MINUTE_ADDR] = round(self.get_average_outlet_flow_per_minute() * 60)
+        self.holding_registers[PROD_FLOW_EST_MINUTE_ADDR] = round(self.get_average_outlet_flow_per_minute())
         self.holding_registers[MIX_TANK_PRESSURE_ADDR] = round(self.tank_pressure)
 
 

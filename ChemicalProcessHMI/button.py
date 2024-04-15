@@ -21,6 +21,30 @@ INPUT_HIGH_LIMIT = 100
 POPUP_WIDTH = 1280
 POPUP_HEIGHT = 720
 
+# Modbus coil addresses
+POWDER_INLET_ADDR = 200
+LIQUID_INLET_ADDR = 201
+MIXER_ADDR = 202
+SAFETY_RELIEF_VALVE_ADDR = 203
+OUTLET_VALVE_ADDR = 204
+AUTO_CONTROL_ENABLE = 205
+
+# Modbus register addresses
+POWDER_TANK_LEVEL_ADDR = 230
+PROPORTIONAL_POWDER_FEED_ADDR = 231
+LIQUID_TANK_LEVEL_ADDR = 232
+PROPORTIONAL_LIQUID_FEED_ADDR = 233
+INTERMEDIATE_SLURRY_LEVEL_ADDR = 234
+PROCESSED_PRODUCT_LEVEL_ADDR = 235
+HEATER_ADDR = 236
+MIX_TANK_PRESSURE_ADDR = 237
+TANK_TEMP_LOWER_ADDR = 238
+TANK_TEMP_UPPER_ADDR = 239
+POWDER_MIXING_VOLUME_ADDR = 240
+LIQUID_MIXING_VOLUME_ADDR = 241
+PROD_FLOW_ADDR = 242
+PROD_FLOW_EST_MINUTE_ADDR = 243
+
 # Button, text and rectangle positions
 BTN_POS = {
     'powder_btn': [0.075, 0.78, 0.314, 0.07],
@@ -406,32 +430,62 @@ class ButtonView:
         # Create labels for displaying numbers on the image
         self.value_labels = {
             "powder_inlet_valve": tk.Label(self.popup, text="Load", bg=HPHMI.gray, fg=HPHMI.dark_blue,
-                                font=("Arial", 14, "bold"), highlightbackground=HPHMI.dark_gray,
-                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
-            "liquid_inlet_valve": tk.Label(self.popup, text="Load", bg=HPHMI.gray, fg=HPHMI.dark_blue,
-                                font=("Arial", 14, "bold"), highlightbackground=HPHMI.dark_gray,
-                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
-            "powder_prop_valve": tk.Label(self.popup, text="Load", bg=HPHMI.gray, fg=HPHMI.dark_blue,
-                                font=("Arial", 14, "bold"), highlightbackground=HPHMI.dark_gray,
-                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
-            "liquid_prop_valve": tk.Label(self.popup, text="Load", bg=HPHMI.gray, fg=HPHMI.dark_blue,
-                                font=("Arial", 14, "bold"), highlightbackground=HPHMI.dark_gray,
-                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
-            "powder_feed_tank": tk.Label(self.popup, text="Load", bg=HPHMI.gray, fg=HPHMI.dark_blue,
-                                font=("Arial", 14, "bold"), highlightbackground=HPHMI.dark_gray,
-                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
-            "liquid_feed_tank": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
-                                font=("Arial", 14, "bold"), highlightbackground=HPHMI.dark_gray,
-                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
-            "generator_voltage": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
-                                font=("Arial", 14, "bold"), highlightbackground=HPHMI.dark_gray,
-                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
-            "grid_power": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
-                                font=("Arial", 14, "bold"), highlightbackground=HPHMI.dark_gray,
-                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
-            "bearing_temperature": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
                                 font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
                                 highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "liquid_inlet_valve": tk.Label(self.popup, text="Load", bg=HPHMI.gray, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "powder_prop_valve": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "liquid_prop_valve": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "powder_feed_tank": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "liquid_feed_tank": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "relief_valve": tk.Label(self.popup, text="Load", bg=HPHMI.gray, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "tank_pressure": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "upper_temperature": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "lower_temperature": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "outlet_valve": tk.Label(self.popup, text="Load", bg=HPHMI.gray, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "heater": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "mixer": tk.Label(self.popup, text="Load", bg=HPHMI.gray, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "outlet_flow": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "outlet_estimate": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=4),
+            "slurry_vol": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=3),
+            "powder_vol": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=3),
+            "liquid_vol": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=3),
+            "product_vol": tk.Label(self.popup, text="Load", bg=HPHMI.white, fg=HPHMI.dark_blue,
+                                font=("Arial", 12, "bold"), highlightbackground=HPHMI.dark_gray,
+                                highlightcolor=HPHMI.dark_gray, highlightthickness=2, padx=6, pady=3),
         }
         
         # Position the labels on the image
@@ -441,9 +495,19 @@ class ButtonView:
         self.value_labels["liquid_prop_valve"].place(relx=0.37, rely=0.775, anchor="center")
         self.value_labels["powder_feed_tank"].place(relx=0.18, rely=0.175, anchor="center")
         self.value_labels["liquid_feed_tank"].place(relx=0.18, rely=0.61, anchor="center")
-        self.value_labels["generator_voltage"].place(relx=0.31, rely=0.11, anchor="center")
-        self.value_labels["grid_power"].place(relx=0.91, rely=0.39, anchor="center")
-        self.value_labels["bearing_temperature"].place(relx=0.27, rely=0.39, anchor="center")
+        self.value_labels["relief_valve"].place(relx=0.515, rely=0.17, anchor="center")
+        self.value_labels["tank_pressure"].place(relx=0.67, rely=0.45, anchor="center")
+        self.value_labels["upper_temperature"].place(relx=0.645, rely=0.52, anchor="center")
+        self.value_labels["lower_temperature"].place(relx=0.6, rely=0.77, anchor="center")
+        self.value_labels["outlet_valve"].place(relx=0.675, rely=0.775, anchor="center")
+        self.value_labels["heater"].place(relx=0.54, rely=0.845, anchor="center")
+        self.value_labels["mixer"].place(relx=0.54, rely=0.795, anchor="center")
+        self.value_labels["outlet_flow"].place(relx=0.735, rely=0.55, anchor="center")
+        self.value_labels["outlet_estimate"].place(relx=0.845, rely=0.62, anchor="center")
+        self.value_labels["slurry_vol"].place(relx=0.53, rely=0.485, anchor="center")
+        self.value_labels["powder_vol"].place(relx=0.53, rely=0.53, anchor="center")
+        self.value_labels["liquid_vol"].place(relx=0.53, rely=0.575, anchor="center")
+        self.value_labels["product_vol"].place(relx=0.53, rely=0.62, anchor="center")
 
         # Add a close button
         close_button = tk.Button(self.popup, text="Close Window", command=self.popup.destroy, 
@@ -451,50 +515,58 @@ class ButtonView:
         close_button.place(relx=0.5, rely=0.95, anchor="center")
 
 
-    def update_labels(self, water_in, exc_sw, tr_sw, grid_sw, turb_speed, bear_temp, gen_vol, grid_pwr):
+    def update_labels(self, data):
         # Ensure that the update occurs only if the popup window is open and visible
         if hasattr(self, 'popup') and self.popup.winfo_exists() and self.popup.winfo_viewable():
-            if water_in:
+            if data[POWDER_INLET_ADDR]:
                 self.value_labels['powder_inlet_valve']['text'] = "OPEN"
                 self.value_labels['powder_inlet_valve']['bg'] = HPHMI.white
             else:
                 self.value_labels['powder_inlet_valve']['text'] = "CLOSED"
                 self.value_labels['powder_inlet_valve']['bg'] = HPHMI.dark_gray
 
-            if water_in:
+            if data[LIQUID_INLET_ADDR]:
                 self.value_labels['liquid_inlet_valve']['text'] = "OPEN"
                 self.value_labels['liquid_inlet_valve']['bg'] = HPHMI.white
             else:
                 self.value_labels['liquid_inlet_valve']['text'] = "CLOSED"
                 self.value_labels['liquid_inlet_valve']['bg'] = HPHMI.dark_gray
 
-            if exc_sw:
-                self.value_labels['excite_breaker']['text'] = "ON"
-                self.value_labels['excite_breaker']['bg'] = HPHMI.white
+            if data[SAFETY_RELIEF_VALVE_ADDR]:
+                self.value_labels['relief_valve']['text'] = "OPEN"
+                self.value_labels['relief_valve']['bg'] = HPHMI.white
             else:
-                self.value_labels['excite_breaker']['text'] = "OFF"
-                self.value_labels['excite_breaker']['bg'] = HPHMI.dark_gray
+                self.value_labels['relief_valve']['text'] = "CLOSED"
+                self.value_labels['relief_valve']['bg'] = HPHMI.dark_gray
 
-            if tr_sw:
-                self.value_labels['transformer_breaker_left']['text'] = "ON"
-                self.value_labels['transformer_breaker_left']['bg'] = HPHMI.white
-                self.value_labels['transformer_breaker_right']['text'] = "ON"
-                self.value_labels['transformer_breaker_right']['bg'] = HPHMI.white
+            if data[OUTLET_VALVE_ADDR]:
+                self.value_labels['outlet_valve']['text'] = "OPEN"
+                self.value_labels['outlet_valve']['bg'] = HPHMI.white
             else:
-                self.value_labels['transformer_breaker_left']['text'] = "OFF"
-                self.value_labels['transformer_breaker_left']['bg'] = HPHMI.dark_gray
-                self.value_labels['transformer_breaker_right']['text'] = "OFF"
-                self.value_labels['transformer_breaker_right']['bg'] = HPHMI.dark_gray
+                self.value_labels['outlet_valve']['text'] = "CLOSED"
+                self.value_labels['outlet_valve']['bg'] = HPHMI.dark_gray
 
-            if grid_sw:
-                self.value_labels['grid_breaker']['text'] = "ON"
-                self.value_labels['grid_breaker']['bg'] = HPHMI.white
+            if data[MIXER_ADDR]:
+                self.value_labels['mixer']['text'] = "ON"
+                self.value_labels['mixer']['bg'] = HPHMI.white
             else:
-                self.value_labels['grid_breaker']['text'] = "OFF"
-                self.value_labels['grid_breaker']['bg'] = HPHMI.dark_gray
+                self.value_labels['mixer']['text'] = "OFF"
+                self.value_labels['mixer']['bg'] = HPHMI.dark_gray
 
-            self.value_labels['turbine_speed']['text'] = turb_speed
-            self.value_labels['generator_voltage']['text'] = gen_vol
-            self.value_labels["grid_power"]['text'] = grid_pwr
-            self.value_labels["bearing_temperature"]['text'] = str(bear_temp) + "°C"
-            
+            self.value_labels["upper_temperature"]['text'] = str(data[TANK_TEMP_UPPER_ADDR]) + "°C"
+            self.value_labels["lower_temperature"]['text'] = str(data[TANK_TEMP_LOWER_ADDR]) + "°C"
+
+            self.value_labels["powder_prop_valve"]['text'] = str(data[PROPORTIONAL_POWDER_FEED_ADDR]) + "%"
+            self.value_labels["liquid_prop_valve"]['text'] = str(data[PROPORTIONAL_LIQUID_FEED_ADDR]) + "%"
+            self.value_labels["heater"]['text'] = str(data[HEATER_ADDR]) + "%"
+            self.value_labels["tank_pressure"]['text'] = str(data[MIX_TANK_PRESSURE_ADDR]) + "kPa"
+
+            self.value_labels["powder_feed_tank"]['text'] = str(data[POWDER_TANK_LEVEL_ADDR]) + "l"
+            self.value_labels["liquid_feed_tank"]['text'] = str(data[LIQUID_TANK_LEVEL_ADDR]) + "l"
+            self.value_labels["slurry_vol"]['text'] = str(data[INTERMEDIATE_SLURRY_LEVEL_ADDR]) + "l"
+            self.value_labels["powder_vol"]['text'] = str(data[POWDER_MIXING_VOLUME_ADDR]) + "l"
+            self.value_labels["liquid_vol"]['text'] = str(data[LIQUID_MIXING_VOLUME_ADDR]) + "l"
+            self.value_labels["product_vol"]['text'] = str(data[PROCESSED_PRODUCT_LEVEL_ADDR]) + "l"
+
+            self.value_labels["outlet_flow"]['text'] = str(data[PROD_FLOW_ADDR]) + "l/s"
+            self.value_labels["outlet_estimate"]['text'] = str(data[PROD_FLOW_EST_MINUTE_ADDR]) + "l/min"

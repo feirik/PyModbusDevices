@@ -181,7 +181,6 @@ class HMIController:
         self.fetch_data_threaded(self.process_fetched_data)
 
         if self.data:
-            print(self.data)
             self.graph.update_graph(self.data[INTERMEDIATE_SLURRY_LEVEL_ADDR], self.data[PROCESSED_PRODUCT_LEVEL_ADDR])
 
             # Temp Heater Pressure PowderMix LiquidMix
@@ -203,8 +202,7 @@ class HMIController:
             auto_mode = self.data[AUTO_CONTROL_ENABLE]
 
             self.indicator.update_status(powder_in, liquid_in, mixer, relief_valve, outlet_valve, auto_mode)
-            # self.button_view.update_labels(water_in, exc_sw, tr_sw, grid_sw, 
-            #                                turbine_speed, bearing_temperature, generator_voltage, grid_power)
+            self.button_view.update_labels(self.data)
 
         # Save the after_id to cancel it later upon closing
         self._after_id = self.view.after(READ_INTERVAL_MS, self.read_data_periodically)

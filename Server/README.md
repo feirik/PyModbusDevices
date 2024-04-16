@@ -3,11 +3,11 @@
 - [Modbus Chemical Process Line](#modbus-chemical-process-line)
 
 
-## Modbus Voltage Regulator
+# Modbus Voltage Regulator
 
 This is a Python implementation of a Modbus TCP slave device simulating a voltage regulator. The voltage regulator is inspired by the no longer supported ModbusPal project written in Java.
 
-# Modbus Holding Registers
+## Modbus Holding Registers
 The following holding registers are implemented in the simulated voltage regulator:
 
 - Ad 0: Input voltage - Varies randomly between 210 to 255
@@ -18,13 +18,13 @@ The following holding registers are implemented in the simulated voltage regulat
 
 The limit checks are only performed if EnableOverride is disabled.
 
-# Modbus Coils
+## Modbus Coils
 The following coils are implemented in the simulator:
 
 - Ad 0: EnableOutput is used to enable the voltage output
 - Ad 1: EnableOverride is used to allow the set point limits to be overridden
 
-# Command Line Arguments
+## Command Line Arguments
 
 The following command line arguments are available when running the Modbus TCP device script:
 
@@ -32,7 +32,7 @@ The following command line arguments are available when running the Modbus TCP d
 * `-p`, `--port`: the port number (default is `11502`)
 * `-d`, `--debug`: enable printing of debug messages (default is `off`)
 
-# Starting the Simulator
+## Starting the Simulator
 
 To start the simulator, run the program with the desired command line arguments. For example, to start the simulator on a specific IP address and port with debugging information enabled, run the following command:
 
@@ -40,7 +40,7 @@ To start the simulator, run the program with the desired command line arguments.
 
 The program will print out the IP address, port, and debug information settings to the console. The simulator will then listen for incoming Modbus TCP requests on the specified IP address and port.
 
-# Unit Tests
+## Unit Tests
 
 You can run unit tests by navigating to the project directory and executing the following command:
 
@@ -50,11 +50,11 @@ python3 -m unittest unit_tests.py
 
 Unit tests for various read and write operations are included. The tests are using the client in `../Client/pymbtget.py` for interacting with the server.
 
-## Modbus Chemical Process Line
+# Modbus Chemical Process Line
 
 This Python script simulates a Modbus TCP slave device that mimics a chemical processing system. The system is controlled via Modbus TCP/IP and involves various dynamic elements like valves, mixers, heaters, and sensors to simulate real-world chemical production scenarios.
 
-# Modbus Holding Registers
+## Modbus Holding Registers
 - Ad 230: POWDER_TANK_LEVEL - Level of powder in the feeder tank.
 - Ad 231: PROPORTIONAL_POWDER_FEED - Controls the feed rate of the powder.
 - Ad 232: LIQUID_TANK_LEVEL - Level of liquid in the feeder tank.
@@ -70,7 +70,7 @@ This Python script simulates a Modbus TCP slave device that mimics a chemical pr
 - Ad 242: PROD_FLOW - Flow rate of the product being output.
 - Ad 243: PROD_FLOW_EST_MINUTE - Estimated flow per minute of the product.
 
-# Modbus Coils
+## Modbus Coils
 - Ad 200: POWDER_INLET - Controls the opening/closing of the powder inlet valve.
 - Ad 201: LIQUID_INLET - Controls the opening/closing of the liquid inlet valve.
 - Ad 202: MIXER - Turns the mixer on or off.
@@ -78,7 +78,7 @@ This Python script simulates a Modbus TCP slave device that mimics a chemical pr
 - Ad 204: OUTLET_VALVE - Controls the outlet valve for tapping the processed product.
 - Ad 205: AUTO_CONTROL_ENABLE - Enables automatic control of the process.
 
-# Command Line Arguments
+## Command Line Arguments
 
 When running the modbus_chemical_process.py script, you can specify the following options:
 
@@ -90,7 +90,7 @@ When running the modbus_chemical_process.py script, you can specify the followin
 
 This command will start the simulator on the specified IP and port with debugging enabled.
 
-# Manual interaction
+## Manual interaction
 
 You can use the pymbtget.py script to control the server over CLI, such as:
 ```

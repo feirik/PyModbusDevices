@@ -1,6 +1,6 @@
 # Contents
-[Modbus Voltage Regulator](#modbus-voltage-regulator)
-[Modbus Chemical Process Line](#modbus-chemical-process-line)
+- [Modbus Voltage Regulator](#modbus-voltage-regulator)
+- [Modbus Chemical Process Line](#modbus-chemical-process-line)
 
 
 ## Modbus Voltage Regulator

@@ -1,20 +1,5 @@
 #!/usr/bin/env python3
 
-# TODO - Set coils and registers to error if pressure builds up too high, if mixing tank overflows, if unmixed fluid is tapped to output flow
-
-# Manual client commands
-""" 
-python3 pymbtget.py -w5 1 -a 200 -p 11502
-python3 pymbtget.py -w5 1 -a 201 -p 11502
-python3 pymbtget.py -w5 1 -a 202 -p 11502
-python3 pymbtget.py -w5 1 -a 205 -p 11502
-
-python3 pymbtget.py -w6 100 -a 231 -p 11502
-python3 pymbtget.py -w6 100 -a 233 -p 11502
-
-python3 pymbtget.py -w6 100 -a 236 -p 11502
- """
-
 import argparse
 import socket
 import struct
@@ -131,6 +116,12 @@ EXTRA_HEAT_FROM_ENHANCED_REACTION = 0.6 # Additional temperature increase from a
 # Constants for outlet flow
 MAX_OUTLET_FLOW = 25  # Max flow rate in l/s when outlet valve is open
 
+# Error values
+ERROR_REG = 9999
+ERROR_COIL = 1
+PRESSURE_ERROR_LIMIT = 400
+POWDER_IGNITION_TEMPERATURE = 130
+
 
 class ModbusServer:
     def __init__(self, host, port, debug=False):
@@ -170,6 +161,9 @@ class ModbusServer:
 
         # Pressure
         self.tank_pressure = 101 # kPa - Start at atmospheric pressure
+
+        # Error boolean indicating process is malfunctioning
+        self.process_error = False
 
         # Initialize Modbus registers to typical startup values
         self.holding_registers[POWDER_TANK_LEVEL_ADDR] = 900 # Start at 900l
@@ -224,6 +218,10 @@ class ModbusServer:
             self.update_tank_pressure()
             self.update_registers()
 
+            # Overwrite values if process is malfunctioning
+            if self.process_error:
+                self.set_error_values()
+
             time.sleep(1)  # Simulate data update every second
 
 
@@ -232,28 +230,28 @@ class ModbusServer:
         self.coils[LIQUID_INLET_ADDR] = 1
         self.coils[MIXER_ADDR] = 1
 
-        # Control valves if below 1000l of each component, or above 2000l
-        if self.powder_mix_tank_level < 1000:
+        # Control valves if below 1400l of each component, or above 1600l
+        if self.powder_mix_tank_level < 1400:
             self.holding_registers[PROPORTIONAL_POWDER_FEED_ADDR] = 50
 
-        if self.powder_mix_tank_level > 2000:
+        if self.powder_mix_tank_level > 1600:
             self.holding_registers[PROPORTIONAL_POWDER_FEED_ADDR] = 0
 
-        if self.liquid_mix_tank_level < 1000:
+        if self.liquid_mix_tank_level < 1400:
             self.holding_registers[PROPORTIONAL_LIQUID_FEED_ADDR] = 50
 
-        if self.liquid_mix_tank_level > 2000:
+        if self.liquid_mix_tank_level > 1600:
             self.holding_registers[PROPORTIONAL_LIQUID_FEED_ADDR] = 0
 
         # If we have filled up the mixing tank with both components, start the heater gently
         if self.powder_mix_tank_level > 1000 and self.liquid_mix_tank_level > 1000:
             self.holding_registers[HEATER_ADDR] = 40
 
-        # Open outlet if we have over 750l of finished product in tank
-        if self.processed_mix_tank_level > 1500:
+        # Open outlet if we have over 2000l of finished product in tank, close if below 1700l
+        if self.processed_mix_tank_level > 2000:
             self.coils[OUTLET_VALVE_ADDR] = 1
 
-        if self.processed_mix_tank_level < 750:
+        if self.processed_mix_tank_level < 1700:
             self.coils[OUTLET_VALVE_ADDR] = 0
 
         # Check for overpressure
@@ -396,6 +394,22 @@ class ModbusServer:
             # Ensure the mixing volumes don't drop below zero
             self.powder_mix_tank_level = max(self.powder_mix_tank_level, 0)
             self.liquid_mix_tank_level = max(self.liquid_mix_tank_level, 0)
+
+        # Check if tank operations result in malfunctioning
+        tank_level = self.powder_mix_tank_level + self.liquid_mix_tank_level + self.processed_mix_tank_level
+
+        # Error if mixing tank is overfilled
+        if tank_level > MAX_TANK_VOLUME:
+            self.process_error = True
+
+        # Error if outlet valve tries to empty unprocessed liquid
+        if self.processed_mix_tank_level == 0 and self.outlet_valve_position != 0:
+            self.process_error = True
+
+        # Error if powder is fed into mixing tank during high temperature, with safety releif valve open
+        if self.coils[SAFETY_RELIEF_VALVE_ADDR] == 1:
+            if self.powder_inlet_flow != 0 and self.temperature_upper > POWDER_IGNITION_TEMPERATURE:
+                self.process_error = True
     
 
     def update_outlet_flow(self):
@@ -477,6 +491,9 @@ class ModbusServer:
         # Ensure pressure doesn't fall below atmospheric pressure
         self.tank_pressure = max(self.tank_pressure, BASE_PRESSURE)
 
+        if self.tank_pressure > PRESSURE_ERROR_LIMIT:
+            self.process_error = True
+
 
     def update_registers(self):
         # Update registers with integers based on process values
@@ -491,6 +508,29 @@ class ModbusServer:
         self.holding_registers[PROD_FLOW_ADDR] = int(self.product_outlet_flow)
         self.holding_registers[PROD_FLOW_EST_MINUTE_ADDR] = round(self.get_average_outlet_flow_per_minute())
         self.holding_registers[MIX_TANK_PRESSURE_ADDR] = round(self.tank_pressure)
+
+    
+    def set_error_values(self):
+        self.holding_registers[POWDER_TANK_LEVEL_ADDR] = ERROR_REG
+        self.holding_registers[PROPORTIONAL_POWDER_FEED_ADDR] = ERROR_REG
+        self.holding_registers[LIQUID_TANK_LEVEL_ADDR] = ERROR_REG
+        self.holding_registers[PROPORTIONAL_LIQUID_FEED_ADDR] = ERROR_REG
+        self.holding_registers[INTERMEDIATE_SLURRY_LEVEL_ADDR] = ERROR_REG
+        self.holding_registers[PROCESSED_PRODUCT_LEVEL_ADDR] = ERROR_REG
+        self.holding_registers[HEATER_ADDR] = ERROR_REG
+        self.holding_registers[MIX_TANK_PRESSURE_ADDR] = ERROR_REG
+        self.holding_registers[TANK_TEMP_LOWER_ADDR] = ERROR_REG
+        self.holding_registers[TANK_TEMP_UPPER_ADDR] = ERROR_REG
+        self.holding_registers[POWDER_MIXING_VOLUME_ADDR] = ERROR_REG
+        self.holding_registers[LIQUID_MIXING_VOLUME_ADDR] = ERROR_REG
+        self.holding_registers[PROD_FLOW_ADDR] = ERROR_REG
+        self.holding_registers[PROD_FLOW_EST_MINUTE_ADDR] = ERROR_REG
+
+        self.coils[POWDER_INLET_ADDR] = ERROR_COIL
+        self.coils[LIQUID_INLET_ADDR] = ERROR_COIL
+        self.coils[MIXER_ADDR] = ERROR_COIL
+        self.coils[SAFETY_RELIEF_VALVE_ADDR] = ERROR_COIL
+        self.coils[OUTLET_VALVE_ADDR] = ERROR_COIL
 
 
     def listen(self):

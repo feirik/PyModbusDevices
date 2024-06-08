@@ -121,6 +121,7 @@ ERROR_REG = 9999
 ERROR_COIL = 1
 PRESSURE_ERROR_LIMIT = 400
 POWDER_IGNITION_TEMPERATURE = 130
+PRODUCT_MIX_ERROR_LEVEL = 20
 
 
 class ModbusServer:
@@ -403,7 +404,7 @@ class ModbusServer:
             self.process_error = True
 
         # Error if outlet valve tries to empty unprocessed liquid
-        if self.processed_mix_tank_level == 0 and self.outlet_valve_position != 0:
+        if self.processed_mix_tank_level <= PRODUCT_MIX_ERROR_LEVEL and self.outlet_valve_position != 0:
             self.process_error = True
 
         # Error if powder is fed into mixing tank during high temperature, with safety releif valve open

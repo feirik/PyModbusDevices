@@ -185,7 +185,7 @@ class ModbusTCPClient:
 
 
     def send_and_receive(self, function_code, modbus_address, value=None, unit_id=1):
-        self.send_request(function_code, modbus_address, value, unit_id=1)
+        self.send_request(function_code, modbus_address, value, unit_id)
         return self.receive_response()
 
 

@@ -8,7 +8,7 @@ Unlike the Modbus voltage regulator, this HMI uses Modbus operations `read multi
 
 To run the ModbusTCP server and HMI (acting as client) with default parameters, run these commands from HMI directory:
 ```shell
-python3 ../Server/modbus_chemical_process.py.py&
+python3 ../Server/modbus_chemical_process.py&
 python3 main.py
 ```
 

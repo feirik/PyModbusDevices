@@ -52,6 +52,7 @@ BYTE_SIZE = 8
 BYTE_ROUND_UP = 7
 REGISTER_BYTE_SIZE = 2
 RESPONSE_HEADER_SIZE = 3
+MODBUS_TCP_HEADER_SIZE = 7
 
 # Modbus coil addresses
 POWDER_INLET_ADDR = 200
@@ -195,6 +196,7 @@ class ModbusServer:
 
         # Create a socket and bind it to the specified host and port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind((host, port))
 
         # Start a thread to simulate data
@@ -543,16 +545,39 @@ class ModbusServer:
         while self.listening:
             # Accept an incoming connection
             conn, addr = self.socket.accept()
-            
-            # Receive the request data
-            request = conn.recv(MAX_REQUEST_SIZE)
-            
-            # If the request data is not empty, handle the request
-            if len(request) > 0:
-                response = self.handle_request(request)
+            client_thread = threading.Thread(target=self.handle_client, args=(conn, addr))
+            client_thread.daemon = True
+            client_thread.start()
+
+
+    def recv_exact(self, conn, size):
+        data = bytearray()
+        while len(data) < size:
+            chunk = conn.recv(size - len(data))
+            if not chunk:
+                return None
+            data.extend(chunk)
+        return bytes(data)
+
+
+    def handle_client(self, conn, addr):
+        try:
+            while self.listening:
+                header = self.recv_exact(conn, MODBUS_TCP_HEADER_SIZE)
+                if not header:
+                    break
+
+                _, _, length = struct.unpack(">HHH", header[:6])
+                body = self.recv_exact(conn, length - 1)
+                if not body:
+                    break
+
+                response = self.handle_request(header + body)
                 conn.sendall(response)
-                
-            # Close the connection
+        except (ConnectionResetError, BrokenPipeError):
+            if self.debug:
+                print(f"Client {addr} disconnected")
+        finally:
             conn.close()
     
 

@@ -1,17 +1,12 @@
 import tkinter as tk
-import os
-import sys
 import threading
 import time
-
-# Add the parent directory of this script to the system path to allow importing modules from there
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from Client.api_pymbtget import ModbusTCPClientAPI
 
 from dynamic_bar import DynamicBar
 from graph import GraphView
 from indicator import Indicator
 from button import ButtonView
+from modbus_session import ModbusSession
 
 # Update constants
 READ_INTERVAL_MS = 1000
@@ -70,6 +65,7 @@ class HMIController:
         self.timeout = timeout
         self.unit_id = unit_id
         self.os = os
+        self.modbus = ModbusSession(host, port, timeout, unit_id)
 
         # Store state of read values
         self.data = None
@@ -104,24 +100,15 @@ class HMIController:
 
 
     def write_register(self, addr, value):
-        client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
-        result = client.write_register(addr, value)
-        client.close()
-        return result
+        return self.modbus.write_register(addr, value)
 
 
     def write_coil(self, addr, value):
-        client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
-        result = client.write_coil(addr, value)
-        client.close()
-        return result
+        return self.modbus.write_coil(addr, value)
 
 
     def read_coil(self, addr):
-        client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
-        current_value = client.read_coil(addr)
-        client.close()
-        return current_value
+        return self.modbus.read_coil(addr)
 
 
     def get_current_value(self, addr):
@@ -133,9 +120,7 @@ class HMIController:
             try:
                 data = {}
 
-                client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
-                coils_array = client.read_multiple_coils(POWDER_INLET_ADDR, NUMBER_OF_COILS)
-                client.close()
+                coils_array = self.modbus.read_coils(POWDER_INLET_ADDR, NUMBER_OF_COILS)
 
                 # Map the coils values to their corresponding addresses
                 if coils_array:
@@ -146,9 +131,7 @@ class HMIController:
                 # Short delay to ensure sending and receiving is finished
                 time.sleep(DELAY_TIME)
 
-                client = ModbusTCPClientAPI(self.host, self.port, self.timeout, self.unit_id)
-                register_array = client.read_multiple_holding_registers(POWDER_TANK_LEVEL_ADDR, NUMBER_OF_REGISTERS)
-                client.close()
+                register_array = self.modbus.read_holding_registers(POWDER_TANK_LEVEL_ADDR, NUMBER_OF_REGISTERS)
 
                 # Map the register values to their corresponding addresses
                 if register_array:
@@ -212,5 +195,6 @@ class HMIController:
         """Called when the Tkinter window is closing."""
         if hasattr(self, '_after_id'):
             self.view.after_cancel(self._after_id)
+        self.modbus.close()
         self.view.master.quit()
         self.view.master.destroy()

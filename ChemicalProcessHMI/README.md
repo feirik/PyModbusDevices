@@ -28,6 +28,7 @@ python3 main.py --host 192.168.1.100 -p 502 -u 1 -t 10
 
 - `matplotlib`: This library facilitates the creation of the graphical components and visualization for the interface.
 - `Pillow`: Used for opening an image as an HMI background of the schematic overview
+- `pymodbus`: Used by the HMI to keep a persistent Modbus TCP session open for repeated reads and writes.
 
 Install with:
 ```shell
